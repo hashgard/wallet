@@ -166,7 +166,7 @@ export default {
       }
       return Promise.resolve(data);
     },
-    fetchValidators: async function (context) {
+    fetchValidators: async function (context, isMy) {
       const {
         data
       } = await ajax.get('/staking/validators?status=bonded');
@@ -184,13 +184,22 @@ export default {
       let validators = []
       await result.reduce(async (memo, i, index) => {
         await memo;
-        const owner = await context.dispatch("fetchValidatorOwner", i.operator_address)
-        validators.push({
-          ...i,
-          owner,
-          index: index + 1
-        })
+        if (isMy) {
+          const owner = await context.dispatch("fetchValidatorOwner", i.operator_address)
+          validators.push({
+            ...i,
+            owner,
+            index: index + 1
+          })
+        } else {
+          validators.push({
+            ...i,
+            index: index + 1
+          })
+        }
+
       }, undefined)
+
       context.commit(
         'setValidators',
         validators

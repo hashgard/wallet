@@ -160,7 +160,7 @@ export default {
     setAmountAll() {
       this.$store.dispatch("staking/setForm", {
         ...this.form,
-        amount: (parseFloat(this.viewBalance.amount) - 1).toFixed(2)
+        amount: this.viewBalance.amount
       });
     },
     onSubmit(e) {

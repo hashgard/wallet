@@ -165,9 +165,9 @@ export default {
     v() {
       const address = this.$route.params.validator;
       const validator = get(this.validatorMap, address) || {};
-      if (isEmpty(validator)) {
-        this.$store.dispatch("staking/fetchValidator", address);
-      }
+      // if (isEmpty(validator)) {
+      //   this.$store.dispatch("staking/fetchValidator", address);
+      // }
       const unbinding = get(this.unbindingMap, address);
       const unbindingList = [];
       if (!isEmpty(unbinding)) {
@@ -301,19 +301,25 @@ export default {
       loading.close();
     }
   },
-  mounted() {
+  async mounted() {
     const { validator } = this.$route.params;
-    this.$store.dispatch("staking/fetchValidators");
+    this.$store.dispatch("staking/fetchValidators", false);
     this.$store.dispatch("staking/setForm", {});
 
     // rest api returns 500 if result data empty
     // this.$store.dispatch("staking/fetchDelegation", validator);
     // this.$store.dispatch("staking/fetchUnbinding", validator);
     // so we fetch list api
-    this.$store.dispatch("staking/fetchDelegations");
+    const delegations = await this.$store.dispatch("staking/fetchDelegations");
     this.$store.dispatch("staking/fetchUnbindings");
-
-    this.$store.dispatch("staking/fetchReward", validator);
+    if (delegations.result) {
+      const currentValidatorDelegation = delegations.result.filter(i => {
+        return i.validator_address == validator;
+      });
+      if (!isEmpty(currentValidatorDelegation)) {
+        this.$store.dispatch("staking/fetchReward", validator);
+      }
+    }
   }
 };
 </script>

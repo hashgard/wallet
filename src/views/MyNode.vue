@@ -102,7 +102,7 @@ export default {
     window.removeEventListener("resize", this.handleResize);
   },
   mounted() {
-    this.$store.dispatch("staking/fetchValidators");
+    this.$store.dispatch("staking/fetchValidators", true);
   }
 };
 </script>
