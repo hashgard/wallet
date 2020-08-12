@@ -199,7 +199,7 @@ export default {
       if (!useMathWallet && !this.pass) {
         this.$message({
           type: "error",
-          message: this.$t("global.required", { name: $t("create.pass") }),
+          message: this.$t("global.required", { name: this.$t("create.pass") }),
           center: true
         });
         return false;
@@ -217,22 +217,28 @@ export default {
           center: true
         });
       }
-      const txStatus = await handleTxReturn(res);
-      if (txStatus) {
-        this.dialogVisible = false;
-        this.$message({
-          type: "success",
-          message: this.$t("global.success", {
-            name: this.$t("staking.withdraw")
-          }),
-          duration: 1000,
-          onClose: () => {
-            window.location.reload();
-          }
-        });
+      if (res.txhash) {
+        const txStatus = await handleTxReturn(res);
+        if (txStatus) {
+          this.dialogVisible = false;
+          this.$message({
+            type: "success",
+            message: this.$t("global.success", {
+              name: this.$t("staking.withdraw")
+            }),
+            duration: 1000,
+            onClose: () => {
+              window.location.reload();
+            }
+          });
+        }
       } else {
+        this.$message({
+          type: "error",
+          message: this.$t(`send.${res}`),
+          center: true
+        });
       }
-
       this.withdrawLoading = false;
     }
   },

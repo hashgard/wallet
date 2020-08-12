@@ -35,7 +35,8 @@ export default {
     balance: [],
     tokenMap: {},
     drawer: false,
-    mathPlugin: false
+    mathPlugin: false,
+    nodes: []
   },
 
   getters: {

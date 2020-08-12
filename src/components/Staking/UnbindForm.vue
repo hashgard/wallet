@@ -27,8 +27,8 @@
           clearable
         ></el-input>
       </el-form-item>
-      <div class="fee"><span>{{$t('send.fee')}}</span>0.05 GARD <span
-          v-if="gardAmount < 0.05"
+      <div class="fee"><span>{{$t('send.fee')}}</span>1 GARD <span
+          v-if="gardAmount < 1"
           style="color:red;"
         >{{$t('global.Insufficient')}}</span></div>
 
@@ -85,6 +85,7 @@ export default {
     };
   },
   computed: {
+    ...mapState("account", ["balance"]),
     ...mapState("staking", [
       "validatorMap",
       "delegationMap",

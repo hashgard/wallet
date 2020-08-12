@@ -22,7 +22,9 @@ export default {
     fromValidator: {},
     form: {},
     unbindings: [],
-    unbindingMap: {}
+    unbindingMap: {},
+    addressRedelegations: [],
+    distributionMap: {}
   },
 
   getters: {},
@@ -73,6 +75,12 @@ export default {
     setDelegationsEmpty: function (state) {
       state.delegations = [];
     },
+    setAddressRedelegations(state, data) {
+      state.addressRedelegations = data
+    },
+    setDistributionMap(state, data) {
+      state.distributionMap = Object.assign({}, state.distributionMap, data)
+    }
   },
 
   actions: {
@@ -172,20 +180,37 @@ export default {
         return Promise.reject();
       }
       const result = [...data.result, ...unbondedData.result, ...unbondingData.result]
-      result.sort((a, b) => b.tokens - a.tokens);
+      // result.sort((a, b) => b.tokens - a.tokens);
+      let validators = []
+      await result.reduce(async (memo, i, index) => {
+        await memo;
+        const owner = await context.dispatch("fetchValidatorOwner", i.operator_address)
+        validators.push({
+          ...i,
+          owner,
+          index: index + 1
+        })
+      }, undefined)
       context.commit(
         'setValidators',
-        result.map((i, index) => {
-          i.index = index + 1;
-          return i;
-        })
+        validators
       );
       const validatorMap = {};
       result.forEach(v => {
         validatorMap[v.operator_address] = v;
       });
+
       context.commit('setValidatorMap', validatorMap);
       return Promise.resolve(result);
+    },
+    fetchValidatorOwner: async function (context, address) {
+      const {
+        data
+      } = await ajax.get(`/distribution/validators/${address}`);
+      context.commit("setDistributionMap", {
+        [address]: data
+      })
+      return Promise.resolve(data.result.operator_address)
     },
     fetchValidator: async function (context, validator_addr) {
       const {
@@ -195,8 +220,9 @@ export default {
         return Promise.reject();
       }
       context.commit('setValidatorMap', {
-        [validator_addr]: data
+        [validator_addr]: data.result
       });
+      context.dispatch("fetchValidatorOwner", validator_addr)
       return Promise.resolve(data);
     },
     setToValidator: async function (context, validator) {
@@ -312,6 +338,27 @@ export default {
         data
       } = await sendTx(context, params.pass, 'withdraw_delegator_reward', {}, msgs);
       return Promise.resolve(data);
+    },
+    async fetchAddressRedelegations(context) {
+      const address = context.rootGetters['account/currentAddress'];
+      const {
+        data
+      } = await ajax.get(`/staking/redelegations?delegator=${address}`);
+      if (isEmpty(data)) {
+        throw new Error();
+      }
+      let result = []
+      data.result.forEach(i => {
+        i.entries.forEach(m => {
+          result.push({
+            entries: m,
+            delegator_address: i.delegator_address,
+            validator_dst_address: i.validator_dst_address,
+            validator_src_address: i.validator_src_address
+          })
+        })
+      })
+      context.commit('setAddressRedelegations', result)
     }
   }
 };

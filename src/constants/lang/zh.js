@@ -12,6 +12,7 @@ const zh = {
     required: '请输入{name}',
     success: '{name}成功!',
     noData: '暂无数据',
+    noData1: '暂无数据',
     no: '否',
     nothing: '-',
     yes: '是',
@@ -456,6 +457,34 @@ const zh = {
     coin: '币',
     doc: '兑换流程说明',
     reward: '奖励 {name} GARD'
+  },
+  redelegate: {
+    my: '我的转委托',
+    amount: '数量',
+    validatorFrom: '转出节点',
+    validatorTo: '转入节点',
+    completionTime: '完成时间',
+    block: '区块高度',
+    detail: '转移委托'
+  },
+  myNode: {
+    myNode: '我的节点',
+    name: '节点名称',
+    comissionRate: '佣金',
+    address: '节点地址',
+    time: '更新时间',
+    info: '节点信息',
+    state: '状态',
+    delegate: '抵押总量',
+    comissionMax: '最高佣金',
+    comissionMaxChange: '修改佣金最大幅度',
+    website: '网站',
+    details: '描述',
+    withdraw: '提取收益地址',
+    rewards: '收益奖励',
+    commission: '佣金奖励',
+    setWithdraw: '设置提取收益地址',
+    set: '设置'
   }
 };
 export default zh;

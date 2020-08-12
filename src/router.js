@@ -43,6 +43,13 @@ import VoteDetail from '@/components/Vote/detail.vue';
 import Migrate from "./views/Migrate.vue";
 import MigrateForm from "@/components/Migrate/MigrateForm.vue"
 
+import RedelegateDetail from "./views/RedelegateDetail.vue"
+
+import MyNode from "@/components/MyValidators/index.vue"
+import MyNodeDetail from "@/components/MyValidators/detail.vue"
+import MyNodeEdit from "@/components/MyValidators/edit.vue"
+import MyWithdraw from "@/components/MyValidators/setWithdraw.vue"
+// 
 // 解决两次访问相同路由地址报错
 const originalPush = Router.prototype.push;
 Router.prototype.push = function push(location) {
@@ -160,6 +167,10 @@ export default new Router({
       component: Receive
     },
     {
+      path: '/redelegateDetail',
+      component: RedelegateDetail
+    },
+    {
       path: '/staking',
       component: StakingMain
     },
@@ -221,6 +232,20 @@ export default new Router({
       children: [{
         path: 'form',
         component: MigrateForm
+      }]
+    },
+    {
+      path: '/myNode',
+      component: MyNode,
+      children: [{
+        path: 'detail',
+        component: MyNodeDetail
+      }, {
+        path: 'edit',
+        component: MyNodeEdit
+      }, {
+        path: 'withdraw',
+        component: MyWithdraw
       }]
     },
     {

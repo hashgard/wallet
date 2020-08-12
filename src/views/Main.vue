@@ -79,6 +79,18 @@
       >
         <VotePage :voteList="proposalList"></VotePage>
       </el-tab-pane> -->
+      <el-tab-pane
+        :label="$t('redelegate.my')"
+        name="redelegate"
+      >
+        <Redelegate></Redelegate>
+      </el-tab-pane>
+      <el-tab-pane
+        :label="$t('myNode.myNode')"
+        name="myNode"
+      >
+        <MyNode></MyNode>
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -94,8 +106,10 @@ import AvatarPanel from "@/components/Panel/AvatarPanel.vue";
 import BalancePanel from "@/components/Panel/BalancePanel";
 import TransactionList from "@/components/TransactionList";
 import DelegatePage from "@/views/StakingMain";
-import VotePage from "@/views/VoteMain.vue";
-import TxPage from "@/views/Txs.vue";
+import Redelegate from "@/views/Redelegate";
+import MyNode from "@/views/MyNode";
+// import VotePage from "@/views/VoteMain.vue";
+// import TxPage from "@/views/Txs.vue";
 import { getViewToken, strToHexCharCode } from "@/utils/helpers";
 
 export default {
@@ -105,8 +119,10 @@ export default {
     BalancePanel,
     TransactionList,
     DelegatePage,
-    TxPage,
-    VotePage
+    // TxPage,
+    // VotePage,
+    Redelegate,
+    MyNode
   },
   data() {
     return {

@@ -12,6 +12,7 @@ const en = {
     required: '{name} is required',
     success: '{name} Success!',
     noData: 'No data available for the time being',
+    noData1: 'No Data',
     no: 'No',
     nothing: '-',
     yes: 'Yes',
@@ -456,6 +457,34 @@ const en = {
     coin: 'coin',
     doc: 'Convert process description',
     reward: 'plus {name} GARD as incentive'
+  },
+  redelegate: {
+    my: 'My Redelegations',
+    amount: 'Amount',
+    validatorFrom: 'Validator From',
+    validatorTo: 'Validator To',
+    completionTime: 'Completion Time',
+    block: 'Block Height',
+    detail: 'Redelegation Detail'
+  },
+  myNode: {
+    myNode: 'My Validators',
+    name: 'Validator Name',
+    comissionRate: 'Comission Rate',
+    address: 'Operator Address',
+    time: 'Update Time',
+    info: 'Validator Info',
+    state: 'State',
+    delegate: 'Total Delegation',
+    comissionMax: 'Comission Max Rate',
+    comissionMaxChange: 'Comission Max Change Rate',
+    website: 'Website',
+    details: 'Details',
+    withdraw: 'Withdraw Address',
+    rewards: 'Rewards',
+    commission: 'Commission',
+    setWithdraw: 'Set Withdraw Address',
+    set: 'Set'
   }
 };
 export default en;

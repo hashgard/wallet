@@ -40,8 +40,8 @@
           clearable
         ></el-input>
       </el-form-item>
-      <div class="fee"><span>{{$t('send.fee')}}</span>0.05 GARD <span
-          v-if="gardAmount < 0.05"
+      <div class="fee"><span>{{$t('send.fee')}}</span>1 GARD <span
+          v-if="gardAmount < 1"
           style="color:red;"
         >{{$t('global.Insufficient')}}</span></div>
 
@@ -160,7 +160,7 @@ export default {
     setAmountAll() {
       this.$store.dispatch("staking/setForm", {
         ...this.form,
-        amount: (parseFloat(this.viewBalance.amount) - 0.05).toFixed(2)
+        amount: (parseFloat(this.viewBalance.amount) - 1).toFixed(2)
       });
     },
     onSubmit(e) {

@@ -13,7 +13,7 @@
       :label="$t('staking.commission')"
     >{{ numeral(get(toValidator, 'commission.commission_rates.rate')).format('(0.[00]%)') }}</s-item>
     <s-item :label="$t('send.amount')">{{numeral(form.amount).format('0,0.[000000000000000000]')}} GARD</s-item>
-    <s-item :label="$t('send.fee')">0.05 GARD</s-item>
+    <s-item :label="$t('send.fee')">1 GARD</s-item>
 
     <el-button
       round
@@ -31,7 +31,7 @@
         type="password"
         v-model="pass"
         :placeholder="$t('create.pass')"
-        @keyup.enter.native="onSend"
+        @keyup.enter.native="onSend(false)"
       ></el-input>
       <span
         slot="footer"
@@ -39,7 +39,7 @@
       >
         <el-button
           class="btn-ok"
-          @click="onSend"
+          @click="onSend(false)"
         >{{$t('global.ok')}}</el-button>
       </span>
     </el-dialog>
@@ -80,7 +80,7 @@ export default {
       if (!useMathWallet && !this.pass) {
         this.$message({
           type: "error",
-          message: $t("global.required", { name: $t("create.pass") }),
+          message: this.$t("global.required", { name: this.$t("create.pass") }),
           center: true
         });
         return false;
@@ -106,27 +106,34 @@ export default {
           center: true
         });
       }
-      const txStatus = await handleTxReturn(res);
-      if (txStatus) {
-        this.isShow = false;
-        this.$message({
-          type: "success",
-          message: this.$t("global.success", {
-            name: this.$route.query.action
-          }),
-          center: true,
-          duration: 1000
-        });
-        if (this.$route.query.action === "unbind") {
-          this.$router.push(
-            `/staking/detail/${this.fromValidator.operator_address}`
-          );
-        } else {
-          this.$router.push(
-            `/staking/detail/${this.toValidator.operator_address}`
-          );
+      if (res.txhash) {
+        const txStatus = await handleTxReturn(res);
+        if (txStatus) {
+          this.isShow = false;
+          this.$message({
+            type: "success",
+            message: this.$t("global.success", {
+              name: this.$route.query.action
+            }),
+            center: true,
+            duration: 1000
+          });
+          if (this.$route.query.action === "unbind") {
+            this.$router.push(
+              `/staking/detail/${this.fromValidator.operator_address}`
+            );
+          } else {
+            this.$router.push(
+              `/staking/detail/${this.toValidator.operator_address}`
+            );
+          }
         }
       } else {
+        this.$message({
+          type: "error",
+          message: this.$t(`send.${res}`),
+          center: true
+        });
       }
       loading.close();
     }

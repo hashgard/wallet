@@ -438,5 +438,34 @@ export default {
       context.commit('setTokenTx', data.txs);
       return Promise.resolve();
     },
+    editValidator: async function (context, params) {
+      const msg = {
+        "type": "cosmos-sdk/MsgEditValidator",
+        "Description": {
+          "moniker": params.moniker,
+          "identity": "owner",
+          "website": params.website,
+          "details": params.details
+        },
+        "address": params.address,
+        "commission_rate": "",
+        "min_self_delegation": ""
+      }
+      const {
+        data
+      } = await sendTx(context, params.pass, 'hg-custom', msg);
+      return Promise.resolve(data);
+    },
+    editWithdraw: async function (context, params) {
+      const msg = {
+        "type": "cosmos-sdk/MsgModifyWithdrawAddress",
+        "delegator_address": params.address,
+        "withdraw_address": params.newAddress
+      }
+      const {
+        data
+      } = await sendTx(context, params.pass, 'hg-custom', msg);
+      return Promise.resolve(data);
+    }
   }
 };

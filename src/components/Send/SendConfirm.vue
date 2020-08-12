@@ -22,14 +22,14 @@
         type="password"
         v-model="pass"
         :placeholder="$t('create.pass')"
-        @keyup.enter.native="onSend"
+        @keyup.enter.native="onSend(false)"
       ></el-input>
       <span
         slot="footer"
         class="dialog-footer"
       >
         <el-button
-          @click="onSend"
+          @click="onSend(false)"
           class="ok-btn"
         >{{$t('global.ok')}}</el-button>
       </span>
@@ -89,7 +89,9 @@ export default {
         if (!useMathWallet && !this.pass) {
           this.$message({
             type: "error",
-            message: $t("global.required", { name: $t("create.pass") }),
+            message: this.$t("global.required", {
+              name: this.$t("create.pass")
+            }),
             center: true
           });
           return false;
@@ -139,14 +141,23 @@ export default {
             center: true
           });
         }
-        const txStatus = await handleTxReturn(res);
-        if (txStatus) {
-          this.$message.success("send success!");
-          this.dialogVisible = false;
-          this.$store.dispatch("transactions/result", res);
-          this.$router.push("/send/finish");
+        if (res.txhash) {
+          const txStatus = await handleTxReturn(res);
+          if (txStatus) {
+            this.$message.success("send success!");
+            this.dialogVisible = false;
+            this.$store.dispatch("transactions/result", res);
+            this.$router.push("/send/finish");
+          } else {
+            this.$store.dispatch("transactions/result", {});
+          }
         } else {
           this.$store.dispatch("transactions/result", {});
+          this.$message({
+            type: "error",
+            message: this.$t(`send.${res}`),
+            center: true
+          });
         }
         loading.close();
       },

@@ -190,7 +190,7 @@ const getTxPara = (from, type, accState, nodeInfo, msg, msgs) => {
     memo: msg.memo || '',
     fees: {
       denom: 'ugard',
-      amount: '50000'
+      amount: (type == 'withdraw_delegation_rewards_all' || type == 'withdraw_delegator_reward') ? '10000000' : '1000000'
     },
     gas: 10000000,
     type,
@@ -232,11 +232,11 @@ export const handleTxReturn = async (res) => {
       return Promise.resolve(false)
     }
   } else {
-    Message({
-      type: "error",
-      message: '交易失败',
-      center: true
-    });
+    // Message({
+    //   type: "error",
+    //   message: '交易失败',
+    //   center: true
+    // });
     return Promise.resolve(false)
   }
 }
