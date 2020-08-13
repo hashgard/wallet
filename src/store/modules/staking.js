@@ -7,6 +7,9 @@ import ajax from '@/utils/ajax.js';
 import {
   sendTx
 } from '@/utils/helpers';
+import {
+  randArr
+} from '@/utils/filters';
 
 export default {
   namespaced: true,
@@ -179,8 +182,9 @@ export default {
       if (isEmpty(data) || isEmpty(unbondedData) || isEmpty(unbondingData)) {
         return Promise.reject();
       }
-      const result = [...data.result, ...unbondedData.result, ...unbondingData.result]
+      const result = randArr([...data.result, ...unbondedData.result, ...unbondingData.result])
       // result.sort((a, b) => b.tokens - a.tokens);
+
       let validators = []
       await result.reduce(async (memo, i, index) => {
         await memo;

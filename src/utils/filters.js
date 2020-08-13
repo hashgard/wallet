@@ -31,3 +31,12 @@ export const formatTime = time =>
   time && time.match(/\d{10}/) ? moment.unix(time).format('YYYY-MM-DD HH:mm:ss') : moment(time).format('YYYY-MM-DD HH:mm:ss');
 
 export const formatNumber = v => (v ? numeral(v.toString()).format('0,0.[00]') : 0);
+export const randArr = arr => {
+  for (var i = 0; i < arr.length; i++) {
+    var iRand = parseInt(arr.length * Math.random());
+    var temp = arr[i];
+    arr[i] = arr[iRand];
+    arr[iRand] = temp;
+  }
+  return arr;
+}
