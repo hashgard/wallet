@@ -192,7 +192,7 @@ const getTxPara = (from, type, accState, nodeInfo, msg, msgs) => {
       denom: 'ugard',
       amount: (type == 'withdraw_delegation_rewards_all' || type == 'withdraw_delegator_reward') ? '10000000' : '1000000'
     },
-    gas: 200000,
+    gas: (type == 'withdraw_delegation_rewards_all' || type == 'withdraw_delegator_reward') ? '2000000' : '200000',
     type,
     msg,
     msgs
