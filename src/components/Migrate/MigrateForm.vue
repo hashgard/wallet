@@ -49,7 +49,7 @@
       </el-form-item>
       <p style="padding-bottom:15px;">
         <span>{{amountInfo}}</span>
-        <span v-if="isRewards"> ,{{rewardInfo}}</span>
+        <!-- <span v-if="isRewards"> ,{{rewardInfo}}</span> -->
       </p>
       <el-button
         class="ok-btn"
@@ -191,23 +191,23 @@ export default {
           this.migrateForm.erc20Address = res.data.data.erc20Address;
           this.migrateForm.gardAddress = res.data.data.gardAddress;
           this.migrateForm.amount = res.data.data.erc20Amount;
-          const rewardsPool = await this.$store.dispatch(
-            "account/fetchRewardsPool"
-          );
-          if (!rewardsPool.result || rewardsPool.result.length == 0) {
-            this.isRewards = false;
-          } else {
-            const pool = BigNumber(rewardsPool.result[0].amount)
-              .dividedBy(Math.pow(10, 6))
-              .toString();
-            const reward = parseFloat(this.amount / 10);
-            if (parseFloat(pool) >= reward) {
-              this.isRewards = true;
-              this.reward = reward;
-            } else {
-              this.isRewards = false;
-            }
-          }
+          // const rewardsPool = await this.$store.dispatch(
+          //   "account/fetchRewardsPool"
+          // );
+          // if (!rewardsPool.result || rewardsPool.result.length == 0) {
+          //   this.isRewards = false;
+          // } else {
+          //   const pool = BigNumber(rewardsPool.result[0].amount)
+          //     .dividedBy(Math.pow(10, 6))
+          //     .toString();
+          //   const reward = parseFloat(this.amount / 10);
+          //   if (parseFloat(pool) >= reward) {
+          //     this.isRewards = true;
+          //     this.reward = reward;
+          //   } else {
+          //     this.isRewards = false;
+          //   }
+          // }
         })
         .catch(error => {
           this.$message.error(this.$t("send.netError"));
