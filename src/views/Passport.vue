@@ -12,7 +12,7 @@
     </div>
     <div
       class="user-select"
-      v-if="mathPlugin && !isEmpty(mathAccount)"
+      v-else
     >
       <div
         class="math-action"
@@ -46,16 +46,14 @@ export default {
       return Object.keys(this.userMap).sort((a, b) =>
         a === this.userName ? -1 : 1
       );
-    },
-    mathPlugin() {
-      return !isEmpty(window.mathExtension);
     }
   },
   methods: {
     isEmpty,
-    logoutMath() {
-      this.$store.dispatch("account/change", this.nameList[0]);
-      this.$store.dispatch("account/resetMathIdentity");
+    async logoutMath() {
+      await this.$store.dispatch("account/change", this.nameList[0]);
+      await this.$store.dispatch("account/resetMathIdentity");
+      this.$router.push({ path: "/main?tab=assets" });
     }
   }
 };

@@ -135,12 +135,13 @@ export const sendTx = async function (context, pass, type, msg, msgs) {
       });
       try {
         const signatureHex = await window.mathExtension.getArbitrarySignature(from, stdTx.GetSignBytes(), type);
-        const signature = {
-          pub_key: Codec.Hex.hexToBytes(signatureHex.publicKey),
-          signature: Codec.Hex.hexToBytes(signatureHex.signature)
-        };
-        stdTx.SetSignature(signature);
+        // const signature = {
+        //   pub_key: Codec.Hex.hexToBytes(signatureHex.publicKey),
+        //   signature: Codec.Hex.hexToBytes(signatureHex.signature)
+        // };
+        // stdTx.SetSignature(signature);
         req = stdTx.GetData();
+        req.tx.signatures = [signatureHex]
       } catch (e) {
         if (e.code === 1000010 || e.code === 100003) {
           return Promise.resolve({

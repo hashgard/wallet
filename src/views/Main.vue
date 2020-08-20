@@ -10,7 +10,8 @@
             >
           </div>
           <div class="name">
-            <p>{{userName}}</p>
+            <p v-if="isEmpty(mathAccount)">{{userName}}</p>
+            <p v-else>{{$t('passport.math')}}</p>
             <s-address
               :address="address"
               :ellipsis="true"
@@ -144,7 +145,8 @@ export default {
       "keyStore",
       "balance",
       "txs",
-      "loading"
+      "loading",
+      "mathAccount"
     ]),
     ...mapState("transactions", { txLoading: "loading", txs: "txs" }),
     ...mapState("gov", ["proposalList"]),

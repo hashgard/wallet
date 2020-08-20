@@ -81,7 +81,7 @@ export default {
         this.$router.push("/agree");
         return;
       }
-      // this.$store.commit("account/getmathPlugin");
+      this.$store.commit("account/getmathPlugin");
       this.$store.commit("account/setDrawer", true);
     },
     changeLang() {
