@@ -52,7 +52,10 @@ export const getViewToken = (coin, tokenMap) => {
       token.img = ggtLogo;
       token.denom = 'GGT';
     } else {
-      token.denom = token.denom.toUpperCase();
+      token.amount = BigNumber(token.amount)
+        .dividedBy(BigNumber(10).pow(6))
+        .toFixed();
+      token.denom = token.denom.slice(1).toUpperCase();
     }
   }
   return token;

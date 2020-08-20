@@ -48,8 +48,9 @@ export default {
             i.amount = numeral(n.toString()).format("0,0.[000000]");
             i.denom = "GGT";
           } else {
-            i.amount = numeral(i.amount).format("0,0.[000000]");
-            i.denom = i.denom.toUpperCase();
+            const n = BigNumber(i.amount).dividedBy(Math.pow(10, 6));
+            i.amount = numeral(n.toString()).format("0,0.[000000]");
+            i.denom = i.denom.slice(1).toUpperCase();
           }
         }
         return `${i.amount}${i.denom}`;

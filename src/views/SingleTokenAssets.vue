@@ -138,7 +138,10 @@ export default {
               .toString();
             token.label = "GARD";
           } else {
-            token.label = token.denom.toUpperCase();
+            token.amount = BigNumber(token.amount)
+              .dividedBy(Math.pow(10, 6))
+              .toString();
+            token.label = token.denom.slice(1).toUpperCase();
           }
         }
         return token;

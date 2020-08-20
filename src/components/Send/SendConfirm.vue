@@ -64,13 +64,10 @@ export default {
       if (this.token) {
         return this.token.symbol;
       }
-      if (this.form.denom === "ugard") {
-        return "GARD";
-      }
       if (sessionStorage.getItem("boxAmount")) {
         return JSON.parse(sessionStorage.getItem("boxAmount")).label;
       }
-      return this.form.denom.toUpperCase();
+      return this.form.denom.slice(1).toUpperCase();
     }
   },
   methods: {

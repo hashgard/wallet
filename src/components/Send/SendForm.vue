@@ -174,7 +174,10 @@ export default {
               .toString();
             token.label = "GGT";
           } else {
-            token.label = token.denom.toUpperCase();
+            token.amount = BigNumber(token.amount)
+              .dividedBy(Math.pow(10, 6))
+              .toString();
+            token.label = token.denom.slice(1).toUpperCase();
           }
         }
         return token;
@@ -208,11 +211,7 @@ export default {
       this.form.amount = "";
     },
     setAmountAll() {
-      if (this.form.denom == "ugard") {
-        this.form.amount = parseFloat(this.selectedBalance.amount) - 1;
-      } else {
-        this.form.amount = parseFloat(this.selectedBalance.amount);
-      }
+      this.form.amount = parseFloat(this.selectedBalance.amount);
     },
     onSubmit(e) {
       e.preventDefault();
