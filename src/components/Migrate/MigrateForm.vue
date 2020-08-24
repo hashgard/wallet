@@ -170,7 +170,7 @@ export default {
         window.navigator.language ||
         window.navigator.userLanguage;
       if (lang.match("zh")) {
-        window.open("https://mp.weixin.qq.com/s/1ankeLIGNYNp9GPwhqv7WQ");
+        window.open("https://mp.weixin.qq.com/s/ehRp4crtwPxGQF1NC6burA");
       } else {
         window.open(
           "https://medium.com/@hashgard/how-to-convert-erc-20-gard-to-mainnet-gard-5e1b9f7229e5"
