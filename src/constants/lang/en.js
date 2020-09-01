@@ -203,6 +203,21 @@ const en = {
     delegated: 'Delegated',
     unpaidReward: 'Unpaid Reward'
   },
+  validator: {
+    coinInfo: 'Coin Info',
+    coinType: 'Coin Type',
+    totalAmount: 'Total Amount',
+    preMintAddress: 'Pre Mint Address',
+    preMintAmount: 'Pre Mint Amount',
+    website: 'Website',
+    icon: 'Token icon',
+    describe: 'Describe',
+    zeroBlockHeight: 'Zero Block Start Height',
+    startHeight: 'Start Height',
+    proposerNodeAmount: 'Proposer Node Amount',
+    voterNodeAmount: 'Voter Node Amount',
+    minSelfDelegation: 'Min Self Delegation'
+  },
   issue: {
     tokens: 'My Token Issuances',
     create: 'Issue New Token',
@@ -289,7 +304,8 @@ const en = {
     status: 'Status',
     all: 'All',
     locked: 'Locked',
-    unlocked: 'Unlocked'
+    unlocked: 'Unlocked',
+    period: 'Lock Period Height'
   },
   future: {
     title: 'Future Payment Box',

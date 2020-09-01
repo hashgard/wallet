@@ -27,7 +27,8 @@ export default {
     unbindings: [],
     unbindingMap: {},
     addressRedelegations: [],
-    distributionMap: {}
+    distributionMap: {},
+    validatorIssue: {}
   },
 
   getters: {},
@@ -83,6 +84,9 @@ export default {
     },
     setDistributionMap(state, data) {
       state.distributionMap = Object.assign({}, state.distributionMap, data)
+    },
+    setValidatorIssue(state, data) {
+      state.validatorIssue = data
     }
   },
 
@@ -237,6 +241,21 @@ export default {
       });
       context.dispatch("fetchValidatorOwner", validator_addr)
       return Promise.resolve(data);
+    },
+    fetchValidatorIssue: async function (context) {
+      const {
+        data
+      } = await ajax.get(`/staking/validator/issue/token`);
+      if (isEmpty(data)) {
+        return Promise.reject();
+      }
+      let validatorIssue = {};
+      if (!isEmpty(data.result)) {
+        data.result.forEach(i => {
+          validatorIssue[i.val] = isEmpty(validatorIssue[i.val]) ? [i] : [...validatorIssue[i.val], i]
+        })
+      }
+      context.commit('setValidatorIssue', validatorIssue)
     },
     setToValidator: async function (context, validator) {
       context.commit('setToValidator', validator);

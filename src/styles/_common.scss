@@ -250,3 +250,10 @@ a:active {
 .el-date-table td.prev-month {
   color: rgba(0, 0, 0, 0.35);
 }
+
+.va-container {
+  .el-collapse-item__header {
+    height: auto;
+    color: $color-success;
+  }
+}

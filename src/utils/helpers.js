@@ -137,7 +137,8 @@ export const sendTx = async function (context, pass, type, msg, msgs) {
         root: true
       });
       try {
-        const signatureHex = await window.mathExtension.getArbitrarySignature(from, stdTx.GetSignBytes(), type);
+        // const signatureHex = await window.mathExtension.getArbitrarySignature(from, stdTx.GetSignBytes(), type); // old
+        const signatureHex = await window.mathExtension.requestSignature(stdTx.GetSignBytes()) //new
         // const signature = {
         //   pub_key: Codec.Hex.hexToBytes(signatureHex.publicKey),
         //   signature: Codec.Hex.hexToBytes(signatureHex.signature)

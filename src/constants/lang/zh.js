@@ -203,6 +203,21 @@ const zh = {
     delegated: '已委托',
     unpaidReward: '未领取收益',
   },
+  validator: {
+    coinInfo: '发币信息',
+    coinType: '币种',
+    totalAmount: '总量',
+    preMintAddress: '预挖地址',
+    preMintAmount: '预挖数量',
+    website: '网站地址',
+    icon: 'Token 图标',
+    describe: '描述信息',
+    zeroBlockHeight: '从零开始块高度',
+    startHeight: '开始高度',
+    proposerNodeAmount: '本节点块产出',
+    voterNodeAmount: '其他节点块产出',
+    minSelfDelegation: '自身最小委托'
+  },
   issue: {
     tokens: '我发行的Token',
     create: '发行新Token',
@@ -289,7 +304,8 @@ const zh = {
     status: '状态',
     all: '全部',
     locked: '锁定中',
-    unlocked: '已解锁'
+    unlocked: '已解锁',
+    period: '锁仓周期'
   },
   future: {
     title: '远期支付盒子',
