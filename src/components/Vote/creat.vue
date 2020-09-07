@@ -47,7 +47,7 @@
             <p>{{$t("vote.activation")}}: 10</p>
             <p v-if="!isEmpty(gardBalance)">{{$t("send.balance")}}: {{gardBalance.amount | formatNumber}}{{gardBalance.denom}}</p>
           </div>
-          <el-input v-model.number.trim="form.amount"></el-input>
+          <el-input :value="10"></el-input>
           <!-- <div class="amount-info">
             <p>{{$t("send.fee")}}: 10000</p>
           </div> -->
@@ -108,7 +108,7 @@
 import { mapState, mapGetters } from "vuex";
 import BigNumber from "bignumber.js";
 import { isEmpty, get } from "lodash";
-import { getViewToken } from "@/utils/helpers";
+import { getViewToken, handleTxReturn } from "@/utils/helpers";
 import { parameter } from "@/constants";
 export default {
   data() {
@@ -135,6 +135,9 @@ export default {
         if (!Number.isInteger(value) || value <= 0) {
           callback(new Error(this.$t("deposit.PositiveNumber")));
           return;
+        }
+        if (parseFloat(this.gardBalance.amount) <= value) {
+          callback(new Error(this.$t("global.Insufficient")));
         }
         callback();
       };
@@ -230,20 +233,24 @@ export default {
         });
       }
       if (res.txhash) {
+        const txStatus = await handleTxReturn(res);
+        if (txStatus) {
+          this.$message({
+            type: "success",
+            message: this.$t("global.success", {
+              name: this.$t("vote.creat")
+            }),
+            center: true,
+            duration: 1000,
+            onClose: () => {
+              this.$router.push({
+                path: "/main?tab=vote"
+              });
+            }
+          });
+        } else {
+        }
         this.dialogVisible1 = false;
-        this.$message({
-          type: "success",
-          message: this.$t("global.success", {
-            name: this.$t("vote.creat")
-          }),
-          center: true,
-          duration: 1000,
-          onClose: () => {
-            this.$router.push({
-              path: "/main?tab=vote"
-            });
-          }
-        });
       } else {
         this.$message({
           type: "error",

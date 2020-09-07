@@ -73,13 +73,13 @@
         name="tx"
       >
         <TxPage></TxPage>
-      </el-tab-pane>
+      </el-tab-pane> -->
       <el-tab-pane
         :label="$t('vote.governance')"
         name="vote"
       >
         <VotePage :voteList="proposalList"></VotePage>
-      </el-tab-pane> -->
+      </el-tab-pane>
       <el-tab-pane
         :label="$t('redelegate.my')"
         name="redelegate"
@@ -109,7 +109,7 @@ import TransactionList from "@/components/TransactionList";
 import DelegatePage from "@/views/StakingMain";
 import Redelegate from "@/views/Redelegate";
 import MyNode from "@/views/MyNode";
-// import VotePage from "@/views/VoteMain.vue";
+import VotePage from "@/views/VoteMain.vue";
 // import TxPage from "@/views/Txs.vue";
 import { getViewToken, strToHexCharCode } from "@/utils/helpers";
 
@@ -121,7 +121,7 @@ export default {
     TransactionList,
     DelegatePage,
     // TxPage,
-    // VotePage,
+    VotePage,
     Redelegate,
     MyNode
   },
@@ -164,6 +164,9 @@ export default {
       }
       if (tab === "receiveVoucher" || tab === "depositVoucher") {
         this.$store.dispatch("account/fetchBalance");
+      }
+      if (tab === "vote") {
+        this.$store.dispatch("gov/list", {});
       }
     },
     onCopy() {

@@ -3,26 +3,15 @@
     class="vote-detail"
     v-if="!isEmpty(detailData)"
   >
-    <div
-      class="voting-time"
-      v-if="detailData.proposal_status === 'VotingPeriod'"
-    >
-      <p class="title">{{$t("vote.distanceTime")}} <span>{{votingTime}}</span></p>
-      <div class="time">
-        <span>{{detailData.voting_start_time | formatTime}}</span>
-        <el-progress
-          :percentage="timePercent"
-          color="#330867"
-        ></el-progress>
-        <span>{{detailData.voting_end_time | formatTime}}</span>
-      </div>
-    </div>
     <p class="title">{{get(detailData, 'content.value.title') || ''}}</p>
     <div class="content">
       <div class="content-top">
-        <span>VoteID: <span class="detail-info">{{detailData.id}}</span></span>
+        <span>ID: <span class="detail-info">{{detailData.id}}</span></span>
       </div>
       <div class="status">{{$t("lockInput.status")}}: <span class="detail-info">{{getStatus}}</span></div>
+      <div class="status">{{$t("vote.type")}}: <span class="detail-info">{{contentType(detailData.content.type)}}</span></div>
+      <div class="submit-time">{{$t("lockInput.creatTime")}}: <span class="detail-info">{{detailData.submit_time | formatTime}}</span></div>
+      <div class="submit-time">{{$t("vote.depositEndTime")}}: <span class="detail-info">{{detailData.deposit_end_time | formatTime}}</span></div>
       <div class="deposit">{{$t("vote.totalDeposit")}}: <span class="detail-info">{{totalDeposit.amount}} {{totalDeposit.denom}}</span></div>
       <div
         class="changes"
@@ -38,12 +27,26 @@
           <span>{{$t("vote.adjusted")}}: {{item.value}}</span>
         </div>
       </div>
-      <div class="submit-time">{{$t("lockInput.creatTime")}}: <span class="detail-info">{{detailData.submit_time | formatTime}}</span></div>
-      <div class="des">{{get(detailData, "content.value.description") || ""}}</div>
+
+      <div class="des">
+        <p>{{$t("vote.des")}}:</p>
+        <p class="des-info">{{get(detailData, "content.value.description") || ""}}</p>
+      </div>
+      <div
+        class="click-option"
+        v-if="detailData.proposal_status === 'VotingPeriod'"
+      >
+        <el-button
+          class="btn"
+          v-for="(item,index) in options"
+          :key="index"
+          @click="clickOption(item.val)"
+        >{{item.label}}</el-button>
+      </div>
     </div>
     <div
-      class="form-content"
       v-if="detailData.proposal_status === 'DepositPeriod'"
+      class="content"
     >
       <el-form
         ref="form"
@@ -62,7 +65,7 @@
           </p>
           <el-input v-model.number.trim="form.amount"></el-input>
           <p class="balance">
-            <span>{{$t("send.fee")}}: 100GARD</span>
+            <!-- <span>{{$t("send.fee")}}: 100GARD</span> -->
             <span v-if="!isEmpty(gardBalance)">{{$t("send.balance")}}: {{gardBalance.amount | formatNumber}}{{gardBalance.denom}}</span>
           </p>
         </el-form-item>
@@ -75,38 +78,69 @@
         </el-form-item>
       </el-form>
     </div>
-    <div
-      class="vote-content"
-      v-if="detailData.proposal_status !== 'DepositPeriod'"
-    >
-      <div class="table-header && nav">
-        <div
-          class="radio"
-          v-if="detailData.proposal_status === 'VotingPeriod'"
-        ></div>
-        <div>{{$t("vote.option")}}</div>
-        <div>{{$t("vote.numberVotes")}}</div>
-        <div>{{$t("vote.proportion")}}</div>
+    <!-- 投票结果 -->
+    <div class="content">
+      <div
+        class="voting-time"
+        v-if="detailData.proposal_status === 'VotingPeriod'"
+      >
+        <p class="title"><span style="color: #000;">{{$t("vote.distanceTime")}}</span> <span>{{countTimeData}}</span></p>
       </div>
-
+      <div class="status">{{$t("vote.voteStartTime")}}: <span class="detail-info">{{detailData.voting_start_time | formatTime}}</span></div>
+      <div class="status">{{$t("vote.voteEndTime")}}: <span class="detail-info">{{detailData.voting_end_time | formatTime}}</span></div>
+      <div
+        class="status"
+        style="color: green;"
+      >{{$t("vote.yes")}}: <span
+          class="detail-info"
+          style="color: green;"
+        >{{detailData.final_tally_result.yes}}</span></div>
+      <div
+        class="status"
+        style="color: red;"
+      >{{$t("vote.no")}}: <span
+          class="detail-info"
+          style="color: red;"
+        ></span>{{detailData.final_tally_result.no}}</div>
+      <div
+        class="status"
+        style="color: red;"
+      >{{$t("vote.noWithVeto")}}: <span
+          class="detail-info"
+          style="color: red;"
+        >{{detailData.final_tally_result.no_with_veto}}</span></div>
+      <div
+        class="status"
+        style="color: orange;"
+      >{{$t("vote.abstain")}}: <span
+          class="detail-info"
+          style="color: orange;"
+        >{{detailData.final_tally_result.abstain}}</span></div>
+    </div>
+    <!-- 投票列表 -->
+    <div class="vote-list">
+      <div class="table-header && nav">
+        <div class="address">{{$t("vote.voter")}}</div>
+        <div class="option">{{$t("vote.voteOption")}}</div>
+      </div>
       <div
         class="table-header && hover"
-        v-for="(item, key, index) in detailData.final_tally_result"
+        v-for="(item,index) in votes"
         :key="index"
       >
-        <div
-          class="radio"
-          v-if="detailData.proposal_status === 'VotingPeriod'"
-        >
-          <el-radio
-            v-model="voted"
-            :label="key"
-          ></el-radio>
+        <div class="address">
+          <span
+            v-if="isValidator(item.voter) != ''"
+            @click="goValidator(isValidator(item.voter).address)"
+          >{{isValidator(item.voter).name}}</span>
+          <span v-else>{{item.voter}}</span>
         </div>
-        <div>{{key}}</div>
-        <div>{{voteCount(key)}}</div>
-        <div>{{percent(voteCount(key))}}</div>
+        <div class="option">{{item.option}}</div>
       </div>
+      <div
+        class="table-header"
+        v-if="votes && votes.length == 0"
+      >{{$t("global.null2")}}</div>
     </div>
     <el-dialog
       :title="$t('create.pass')"
@@ -134,7 +168,7 @@
 <script>
 import { mapState, mapGetters } from "vuex";
 import { isEmpty, get } from "lodash";
-import { getViewToken } from "@/utils/helpers";
+import { getViewToken, handleTxReturn } from "@/utils/helpers";
 import BigNumber from "bignumber.js";
 export default {
   name: "voteDetail",
@@ -146,12 +180,21 @@ export default {
         amount: null,
         pass: null
       },
-      voted: ""
+      voted: "",
+      countTimeData: ""
     };
   },
   computed: {
-    ...mapState("gov", ["proposalMap", "votes", "minDeposit"]),
+    ...mapState("gov", ["proposalMap", "votes", "minDeposit", "validators"]),
     ...mapState("account", ["balance", "tokenMap", "mathAccount"]),
+    options() {
+      return [
+        { label: this.$t("vote.yes"), val: "yes" },
+        { label: this.$t("vote.no"), val: "no" },
+        { label: this.$t("vote.noWithVeto"), val: "no_with_veto" },
+        { label: this.$t("vote.abstain"), val: "abstain" }
+      ];
+    },
     rules() {
       const validatorNumber = (rule, value, callback) => {
         if (!Number.isInteger(value) || value <= 0) {
@@ -182,139 +225,6 @@ export default {
       } else {
         return { denom: "GARD", amount: 0 };
       }
-    },
-    totalVote() {
-      if (this.detailData.proposal_status === "VotingPeriod") {
-        if (!isEmpty(this.votes)) {
-          return this.votes.length;
-        } else {
-          return 0;
-        }
-      } else {
-        return (
-          parseInt(this.detailData.final_tally_result.yes) +
-          parseInt(this.detailData.final_tally_result.no) +
-          parseInt(this.detailData.final_tally_result.abstain) +
-          parseInt(this.detailData.final_tally_result.no_with_veto)
-        );
-      }
-    },
-    percent() {
-      return function(value) {
-        if (value == "0") {
-          return 0;
-        } else {
-          const result = (parseInt(value) / this.totalVote) * 100;
-          return `${result}%`;
-        }
-      };
-    },
-    votingTime() {
-      const time = Math.abs(
-        new Date(this.detailData.voting_end_time).getTime() -
-          new Date().getTime()
-      );
-
-      const m = parseInt(time / 1000 / 60);
-      if (m <= 60) {
-        return `${m}分钟`;
-      } else {
-        const h = (m / 60).toFixed(2);
-        const timeArry = h.split(".");
-        const minute = parseFloat(`0.${timeArry[1]}`);
-        return `${timeArry[0]}小时${parseInt(minute * 60)}分`;
-      }
-    },
-    surplusTime() {
-      const time = Math.abs(
-        new Date(this.detailData.voting_end_time).getTime() -
-          new Date().getTime()
-      );
-      return parseInt(time / 1000 / 60);
-    },
-    voteTime() {
-      const time = Math.abs(
-        new Date(this.detailData.voting_end_time).getTime() -
-          new Date(this.detailData.voting_start_time).getTime()
-      );
-      return parseInt(time / 1000 / 60);
-    },
-    timePercent() {
-      return 100 - parseInt((this.surplusTime / this.voteTime) * 100);
-    },
-    voteYes() {
-      if (this.detailData.proposal_status === "VotingPeriod") {
-        if (!isEmpty(this.votes)) {
-          const filterArr = this.votes.filter(item => {
-            return item.option === "Yes";
-          });
-          return filterArr.length;
-        } else {
-          return 0;
-        }
-      } else {
-        return parseInt(this.detailData.final_tally_result.yes);
-      }
-    },
-    voteNo() {
-      if (this.detailData.proposal_status === "VotingPeriod") {
-        if (!isEmpty(this.votes)) {
-          const filterArr = this.votes.filter(item => {
-            return item.option === "No";
-          });
-          return filterArr.length;
-        } else {
-          return 0;
-        }
-      } else {
-        return parseInt(this.detailData.final_tally_result.no);
-      }
-    },
-    voteAbstain() {
-      if (this.detailData.proposal_status === "VotingPeriod") {
-        if (!isEmpty(this.votes)) {
-          const filterArr = this.votes.filter(item => {
-            return item.option === "Abstain";
-          });
-          return filterArr.length;
-        } else {
-          return 0;
-        }
-      } else {
-        return parseInt(this.detailData.final_tally_result.abstain);
-      }
-    },
-    voteNoWithVeto() {
-      if (this.detailData.proposal_status === "VotingPeriod") {
-        if (!isEmpty(this.votes)) {
-          const filterArr = this.votes.filter(item => {
-            return item.option === "NoWithVeto";
-          });
-          return filterArr.length;
-        } else {
-          return 0;
-        }
-      } else {
-        return parseInt(this.detailData.final_tally_result.no_with_veto);
-      }
-    },
-    voteCount() {
-      return function(option) {
-        switch (option) {
-          case "yes":
-            return this.voteYes;
-            break;
-          case "no":
-            return this.voteNo;
-            break;
-          case "abstain":
-            return this.voteAbstain;
-            break;
-          case "no_with_veto":
-            return this.voteNoWithVeto;
-            break;
-        }
-      };
     },
     totalDeposit() {
       const token = get(this.detailData, "total_deposit");
@@ -367,18 +277,56 @@ export default {
           return this.$t("vote.reject");
           break;
       }
-    }
-  },
-  watch: {
-    voted(val) {
-      this.type = false;
-      this.dialogVisible = true;
-      this.form.pass = "";
+    },
+    isValidator() {
+      return function(address) {
+        const result = this.validators.filter(i => {
+          return i.owner == address;
+        });
+        if (result.length > 0) {
+          return result[0];
+        } else {
+          return "";
+        }
+      };
     }
   },
   methods: {
     isEmpty,
     get,
+    clickOption(val) {
+      this.voted = val;
+      this.type = false;
+      this.dialogVisible = true;
+      this.form.pass = "";
+    },
+    contentType(val) {
+      return val.split("/")[1];
+    },
+    addZero(i) {
+      return i < 10 ? "0" + i : i + "";
+    },
+    countTime() {
+      var nowtime = new Date();
+      var endtime = new Date(this.detailData.voting_end_time);
+      var lefttime = parseInt((endtime.getTime() - nowtime.getTime()) / 1000);
+      var d = parseInt(lefttime / (24 * 60 * 60));
+      var h = parseInt((lefttime / (60 * 60)) % 24);
+      var m = parseInt((lefttime / 60) % 60);
+      var s = parseInt(lefttime % 60);
+      d = d < 10 ? "0" + d : d + "";
+      h = h < 10 ? "0" + h : h + "";
+      m = m < 10 ? "0" + m : m + "";
+      s = s < 10 ? "0" + s : s + "";
+      if (lefttime <= 0) {
+        window.location.reload();
+        return;
+      }
+      this.countTimeData = `${d}${this.$t("vote.d")} ${h} ${this.$t(
+        "vote.h"
+      )} ${m} ${this.$t("vote.m")} ${s} ${this.$t("vote.s")}`;
+      setTimeout(this.countTime, 1000);
+    },
     getSeconds() {},
     onSubmit(formName) {
       this.$refs[formName].validate(valid => {
@@ -460,19 +408,23 @@ export default {
         });
       }
       if (res.txhash) {
+        const txStatus = await handleTxReturn(res);
+        if (txStatus) {
+          this.dialogVisible = false;
+          this.$message({
+            type: "success",
+            message: this.$t("global.success", {
+              name: this.type ? this.$t("vote.mortgage") : this.$t("vote.vote")
+            }),
+            center: true,
+            duration: 1500,
+            onClose: () => {
+              window.location.reload();
+            }
+          });
+        } else {
+        }
         this.dialogVisible = false;
-        this.$message({
-          type: "success",
-          message: this.$t("global.success", {
-            name: this.type ? this.$t("vote.mortgage") : this.$t("vote.vote")
-          }),
-          center: true,
-          duration: 2000,
-          onClose: () => {
-            this.$store.dispatch("account/fetchBalance");
-            this.$store.dispatch("gov/fetchVotes", this.$route.params.id);
-          }
-        });
       } else {
         this.$message({
           type: "error",
@@ -483,8 +435,15 @@ export default {
       loading.close();
     }
   },
-  mounted() {
-    this.$store.dispatch("gov/list", {});
+  async mounted() {
+    await this.$store.dispatch("gov/list", {});
+    await this.$store.dispatch("gov/fetchValidators");
+    if (
+      !isEmpty(this.detailData) &&
+      this.detailData.proposal_status === "VotingPeriod"
+    ) {
+      this.countTime();
+    }
     this.$store.dispatch("account/fetchBalance");
     this.$store.dispatch("gov/fetchVotes", this.$route.params.id);
     this.$store.dispatch("gov/fetchMinDeposit");
@@ -500,7 +459,6 @@ export default {
     background: #fff;
     border-radius: 6px;
     color: #000;
-    margin-bottom: 40px;
     .time {
       margin-top: 20px;
       display: flex;
@@ -520,6 +478,7 @@ export default {
   .title {
     text-align: center;
     font-size: 24px;
+    color: #fff;
     span {
       color: red;
     }
@@ -541,12 +500,12 @@ export default {
     > .des {
       margin-top: 20px;
       color: rgba(0, 0, 0, 0.7);
+      .des-info {
+        word-break: break-all;
+      }
     }
     > .changes {
       margin-top: 20px;
-      p {
-        margin-bottom: 15px;
-      }
       .params {
         color: rgba(0, 0, 0, 0.7);
         span {
@@ -559,6 +518,13 @@ export default {
     }
     .detail-info {
       color: rgba(0, 0, 0, 0.7);
+    }
+    .click-option {
+      margin-top: 10px;
+      > .btn {
+        background: $main-btn;
+        color: #fff;
+      }
     }
   }
   .form-content {
@@ -573,8 +539,8 @@ export default {
       padding-right: 0;
     }
   }
-  .vote-content {
-    margin-top: 60px;
+  .vote-list {
+    margin-top: 20px;
     .table-header {
       background-color: rgba(245, 247, 250, 1);
       display: flex;
@@ -599,13 +565,12 @@ export default {
         text-overflow: ellipsis;
         white-space: nowrap;
         text-indent: 1em;
-        flex-basis: 20%;
       }
-      .radio {
-        flex-basis: 10%;
+      > .address {
+        flex-basis: 70%;
       }
-      /deep/.el-radio__label {
-        display: none !important;
+      > .option {
+        flex-basis: 30%;
       }
     }
   }
