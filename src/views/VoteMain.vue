@@ -22,15 +22,14 @@
       <div class="header-right">
         <el-input
           v-model="title"
-          v-if="$route.name === 'voteList'"
           :placeholder="$t('vote.title')"
         ></el-input>
-        <router-link
+        <!-- <router-link
           v-if="$route.name !== 'voteList'"
           to="vote/list"
         >
           <el-button>{{$t("vote.all")}}</el-button>
-        </router-link>
+        </router-link> -->
       </div>
     </div>
     <div

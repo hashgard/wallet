@@ -6,7 +6,11 @@
     <p class="title">{{get(detailData, 'content.value.title') || ''}}</p>
     <div class="content">
       <div class="content-top">
-        <span>ID: <span class="detail-info">{{detailData.id}}</span></span>
+        <span>ID: <span
+            class="detail-info"
+            style="color: #330867;font-weight:bolder;cursor:pointer;"
+            @click="goExplorer(detailData.id)"
+          >{{detailData.id}}</span></span>
       </div>
       <div class="status">{{$t("lockInput.status")}}: <span class="detail-info">{{getStatus}}</span></div>
       <div class="status">{{$t("vote.type")}}: <span class="detail-info">{{contentType(detailData.content.type)}}</span></div>
@@ -97,10 +101,10 @@
         >{{detailData.final_tally_result.yes}}</span></div>
       <div
         class="status"
-        style="color: red;"
+        style="color: orange;"
       >{{$t("vote.no")}}: <span
           class="detail-info"
-          style="color: red;"
+          style="color: orange;"
         ></span>{{detailData.final_tally_result.no}}</div>
       <div
         class="status"
@@ -109,16 +113,16 @@
           class="detail-info"
           style="color: red;"
         >{{detailData.final_tally_result.no_with_veto}}</span></div>
+      <div class="status">{{$t("vote.abstain")}}: <span class="detail-info">{{detailData.final_tally_result.abstain}}</span></div>
       <div
         class="status"
-        style="color: orange;"
-      >{{$t("vote.abstain")}}: <span
-          class="detail-info"
-          style="color: orange;"
-        >{{detailData.final_tally_result.abstain}}</span></div>
+        v-if="detailData.proposal_status === 'VotingPeriod'"
+      >{{$t("vote.myVote")}}: <span v-if="!isEmpty(addressVotes)">{{addressVotes.option}}</span>
+        <span v-else>{{$t("vote.null")}}</span>
+      </div>
     </div>
     <!-- 投票列表 -->
-    <div class="vote-list">
+    <!-- <div class="vote-list">
       <div class="table-header && nav">
         <div class="address">{{$t("vote.voter")}}</div>
         <div class="option">{{$t("vote.voteOption")}}</div>
@@ -141,7 +145,7 @@
         class="table-header"
         v-if="votes && votes.length == 0"
       >{{$t("global.null2")}}</div>
-    </div>
+    </div> -->
     <el-dialog
       :title="$t('create.pass')"
       :visible.sync="dialogVisible"
@@ -170,6 +174,8 @@ import { mapState, mapGetters } from "vuex";
 import { isEmpty, get } from "lodash";
 import { getViewToken, handleTxReturn } from "@/utils/helpers";
 import BigNumber from "bignumber.js";
+import axios from "axios";
+import { baseURL } from "@/constants";
 export default {
   name: "voteDetail",
   data() {
@@ -181,12 +187,13 @@ export default {
         pass: null
       },
       voted: "",
-      countTimeData: ""
+      countTimeData: "",
+      addressVotes: {}
     };
   },
   computed: {
     ...mapState("gov", ["proposalMap", "votes", "minDeposit", "validators"]),
-    ...mapState("account", ["balance", "tokenMap", "mathAccount"]),
+    ...mapState("account", ["balance", "tokenMap", "mathAccount", "keyStore"]),
     options() {
       return [
         { label: this.$t("vote.yes"), val: "yes" },
@@ -294,6 +301,9 @@ export default {
   methods: {
     isEmpty,
     get,
+    goExplorer(id) {
+      window.open(`https://explorer.hashgard.com/#/proposal/${id}`);
+    },
     clickOption(val) {
       this.voted = val;
       this.type = false;
@@ -443,9 +453,19 @@ export default {
       this.detailData.proposal_status === "VotingPeriod"
     ) {
       this.countTime();
+      axios
+        .get(
+          `${baseURL}/gov/proposals/${this.$route.params.id}/votes/${this.keyStore.address}`
+        )
+        .then(res => {
+          this.addressVotes = res.data.result;
+        })
+        .catch(error => {
+          this.addressVotes = {};
+        });
     }
     this.$store.dispatch("account/fetchBalance");
-    this.$store.dispatch("gov/fetchVotes", this.$route.params.id);
+    // this.$store.dispatch("gov/fetchVotes", this.$route.params.id);
     this.$store.dispatch("gov/fetchMinDeposit");
   }
 };

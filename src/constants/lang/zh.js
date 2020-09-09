@@ -449,7 +449,8 @@ const zh = {
     noWithVeto: '严重反对',
     abstain: '弃权',
     voter: '投票人',
-    voteOption: '投票选项'
+    voteOption: '投票选项',
+    null: '暂未投票'
   },
   bet: {
     betHall: '投注大厅',

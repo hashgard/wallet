@@ -1,14 +1,20 @@
 import axios from 'axios';
-import { Message } from 'element-ui';
-import { baseURL } from '@/constants';
+import {
+  Message
+} from 'element-ui';
+import {
+  baseURL
+} from '@/constants';
 
-const $ajax = axios.create({ baseURL });
+const $ajax = axios.create({
+  baseURL
+});
 
 $ajax.interceptors.response.use(
-  function(config) {
+  function (config) {
     return config;
   },
-  function(error) {
+  function (error) {
     Message({
       type: 'error',
       message: 'Network Error',

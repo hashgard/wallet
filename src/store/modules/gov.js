@@ -15,7 +15,8 @@ export default {
     proposalMap: {},
     votes: [],
     minDeposit: {},
-    validators: []
+    validators: [],
+    addressVotes: {}
   },
   getters: {
 
@@ -35,6 +36,9 @@ export default {
     },
     setValidators(state, data) {
       state.validators = data
+    },
+    setAddressVotes(state, data) {
+      state.addressVotes = data
     }
   },
   actions: {
@@ -113,6 +117,16 @@ export default {
       } = await ajax.get(`gov/proposals/${id}/votes`)
       if (data) {
         context.commit("setVotes", data.result)
+      }
+      return Promise.resolve(data)
+    },
+    fetchAddressVotes: async function (context, id) {
+      const address = context.rootGetters['account/currentAddress'];
+      const {
+        data
+      } = await ajax.get(`gov/proposals/${id}/votes/${address}`)
+      if (data) {
+        context.commit("setAddressVotes", data.result)
       }
       return Promise.resolve(data)
     },

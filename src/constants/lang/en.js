@@ -449,7 +449,8 @@ const en = {
     noWithVeto: 'No with veto',
     abstain: 'Abstain',
     voter: 'Voter',
-    voteOption: 'Vote Option'
+    voteOption: 'Vote Option',
+    null: 'No Vote'
   },
   bet: {
     betHall: 'Betting Hall',
