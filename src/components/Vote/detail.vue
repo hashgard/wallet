@@ -18,6 +18,19 @@
       <div class="submit-time">{{$t("vote.depositEndTime")}}: <span class="detail-info">{{detailData.deposit_end_time | formatTime}}</span></div>
       <div class="deposit">{{$t("vote.totalDeposit")}}: <span class="detail-info">{{totalDeposit.amount}} {{totalDeposit.denom}}</span></div>
       <div
+        class="status"
+        v-if="contentType(detailData.content.type) == 'StakeIssueLockedSpendProposal'"
+      >{{$t("vote.proDenom")}}: {{handleDenom(get(detailData, "content.value.denom"))}}</div>
+      <div
+        class="status"
+        v-if="contentType(detailData.content.type) == 'StakeIssueLockedSpendProposal'"
+      >{{$t("vote.proAmount")}}: <data-amount :list="get(detailData,'content.value.amount')"></data-amount>
+      </div>
+      <div
+        class="status"
+        v-if="contentType(detailData.content.type) == 'StakeIssueLockedSpendProposal'"
+      >{{$t("vote.proRecipient")}}: {{get(detailData,"content.value.recipient")}}</div>
+      <div
         class="changes"
         v-if="get(detailData, 'content.value.changes')"
       >
@@ -194,6 +207,11 @@ export default {
   computed: {
     ...mapState("gov", ["proposalMap", "votes", "minDeposit", "validators"]),
     ...mapState("account", ["balance", "tokenMap", "mathAccount", "keyStore"]),
+    handleDenom() {
+      return function(val) {
+        return val.slice(1).toUpperCase();
+      };
+    },
     options() {
       return [
         { label: this.$t("vote.yes"), val: "yes" },
@@ -519,7 +537,7 @@ export default {
     }
     > .des {
       margin-top: 20px;
-      color: rgba(0, 0, 0, 0.7);
+      color: rgba(0, 0, 0, 1);
       .des-info {
         word-break: break-all;
       }

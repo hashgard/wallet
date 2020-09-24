@@ -450,7 +450,10 @@ const en = {
     abstain: 'Abstain',
     voter: 'Voter',
     voteOption: 'Vote Option',
-    null: 'No Vote'
+    null: 'No Vote',
+    proDenom: 'Denom',
+    proRecipient: 'Recipient',
+    proAmount: 'Amount'
   },
   bet: {
     betHall: 'Betting Hall',

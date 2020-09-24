@@ -450,7 +450,10 @@ const zh = {
     abstain: '弃权',
     voter: '投票人',
     voteOption: '投票选项',
-    null: '暂未投票'
+    null: '暂未投票',
+    proDenom: '代币',
+    proRecipient: '解锁资产收取地址',
+    proAmount: '需解锁资产'
   },
   bet: {
     betHall: '投注大厅',

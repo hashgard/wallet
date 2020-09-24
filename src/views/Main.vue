@@ -74,12 +74,12 @@
       >
         <TxPage></TxPage>
       </el-tab-pane> -->
-      <el-tab-pane
+      <!-- <el-tab-pane
         :label="$t('vote.governance')"
         name="vote"
       >
         <VotePage :voteList="proposalList"></VotePage>
-      </el-tab-pane>
+      </el-tab-pane> -->
       <el-tab-pane
         :label="$t('redelegate.my')"
         name="redelegate"
