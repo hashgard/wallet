@@ -12,6 +12,11 @@
         round
         @click="getStarted"
       >{{$t('home.create')}}</el-button>
+      <el-button
+        style="z-index:999 !important"
+        round
+        @click="goDappList"
+      >应用市场</el-button>
     </div>
     <div class="home-items">
       <div class="items">
@@ -165,6 +170,17 @@ export default {
         return;
       }
       this.$router.push({ path: "/create/pass" });
+    },
+    goDappList() {
+      if (isEmpty(localStorage.getItem("gard_wallet_users"))) {
+        this.$message({
+          type: "error",
+          message: "请先创建本地钱包",
+          center: true
+        });
+      } else {
+        this.$router.push({ path: "/dapp/list" });
+      }
     }
   }
 };

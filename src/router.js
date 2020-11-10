@@ -49,6 +49,11 @@ import MyNode from "@/components/MyValidators/index.vue"
 import MyNodeDetail from "@/components/MyValidators/detail.vue"
 import MyNodeEdit from "@/components/MyValidators/edit.vue"
 import MyWithdraw from "@/components/MyValidators/setWithdraw.vue"
+
+import Dapp from "./views/Dapp/index.vue"
+import DappList from "./views/Dapp/list.vue"
+import IssueList from "./views/Dapp/issueList.vue"
+import IssueDetail from "./views/Dapp/issueDetail.vue"
 // 
 // 解决两次访问相同路由地址报错
 const originalPush = Router.prototype.push;
@@ -247,6 +252,23 @@ export default new Router({
         path: 'withdraw',
         component: MyWithdraw
       }]
+    },
+    {
+      path: '/dapp',
+      component: Dapp,
+      children: [{
+          path: 'list',
+          component: DappList
+        },
+        {
+          path: 'issueList',
+          component: IssueList
+        },
+        {
+          path: 'issueDetail',
+          component: IssueDetail
+        }
+      ]
     },
     {
       path: '*',
