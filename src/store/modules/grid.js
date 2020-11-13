@@ -11,7 +11,10 @@ export default {
     dappList: [],
     dappDetail: {},
     dappIssueList: [],
-    dappIssueDetail: {}
+    dappIssueDetail: {},
+    lastBlock: '',
+    gridDepositsListAll: [],
+    dappFees: {}
   },
   getters: {
 
@@ -24,10 +27,22 @@ export default {
       state.dappDetail = data
     },
     setDappIssueList(state, data) {
-      state.dappIssueList = data
+      state.dappIssueList = [...state.dappIssueList, ...data]
     },
     setDappIssueDetail(state, data) {
       state.dappIssueDetail = data
+    },
+    setLastBlock(state, data) {
+      state.lastBlock = data
+    },
+    setDappIssueListEmpty(state) {
+      state.dappIssueList = []
+    },
+    setGridDepositsListAll(state, data) {
+      state.gridDepositsListAll = data
+    },
+    setDappFees(state, data) {
+      state.dappFees = data
     }
   },
   actions: {
@@ -55,9 +70,9 @@ export default {
     async fetchDappIssueList(context, params) {
       const {
         data
-      } = await ajax.get(`/grid999/grid/list/${params.dappId}/0/10 `);
+      } = await ajax.get(`/grid999/grid/list/${params.dappId}/${params.startId}/10`);
       if (!isEmpty(data)) {
-        context.commit("setDappIssueList", data.result);
+        context.commit("setDappIssueList", data.result ? data.result : []);
       }
       return Promise.resolve(data);
     },
@@ -65,11 +80,38 @@ export default {
     async fetchDappIssueDetail(context, params) {
       const {
         data
-      } = await ajax.get(`/grid999/grid/detail/${params.dappId}/${params.gridId} `);
+      } = await ajax.get(`/grid999/grid/detail/${params.dappId}/${params.gridId}`);
       if (!isEmpty(data)) {
         context.commit("setDappIssueDetail", data.result);
       }
       return Promise.resolve(data);
+    },
+    //获取当前格子的deposits
+    async fetchGridDepositsAll(context, params) {
+      const indexInfo = context.state.dappIssueDetail.items.filter(i => {
+        return i.index == params.index;
+      });
+      if (isEmpty(indexInfo[0].deposits)) {
+        context.commit("setGridDepositsListAll", [])
+      } else {
+        context.commit("setGridDepositsListAll", indexInfo[0].deposits)
+      }
+    },
+    //分页获取当前格子deposits，每次取10条
+    async fetchGridDepositsList(context, params) {
+      const listAll = context.state.gridDepositsListAll;
+      return Promise.resolve(listAll ? listAll.slice((params.page - 1) * params.pageSize, (params.page -
+        1) * params.pageSize + params.pageSize) : [])
+    },
+    // 获取Dapp手续费
+    async fetchDappFees(context) {
+      const {
+        data
+      } = await ajax.get(`/grid999/params`);
+      if (!isEmpty(data)) {
+        context.commit("setDappFees", data.result);
+        sessionStorage.setItem("dappFees", JSON.stringify(data.result))
+      }
     },
     //抢占格子
     async createGrid(context, params) {
@@ -88,7 +130,7 @@ export default {
       }
       const {
         data
-      } = await sendTx(context, params.pass, 'hg-custom', msg);
+      } = await sendTx(context, params.pass, 'MsgDappCreateGrid', msg);
       return Promise.resolve(data);
     },
     //格子质押币
@@ -107,7 +149,7 @@ export default {
       };
       const {
         data
-      } = await sendTx(context, params.pass, 'hg-custom', msg);
+      } = await sendTx(context, params.pass, 'MsgDappDeposit', msg);
       return Promise.resolve(data);
     },
     //取回格子
@@ -121,8 +163,18 @@ export default {
       }
       const {
         data
-      } = await sendTx(context, params.pass, 'hg-custom', msg);
+      } = await sendTx(context, params.pass, 'MsgDappWithdraw', msg);
       return Promise.resolve(data);
+    },
+    //获取最后块
+    async fetchLastBlock(context) {
+      const {
+        data
+      } = await ajax.get(`/blocks/latest`);
+      if (!isEmpty(data)) {
+        context.commit("setLastBlock", data.block.header.height);
+      }
+      return Promise.resolve(data.block.header.height);
     }
   }
 }

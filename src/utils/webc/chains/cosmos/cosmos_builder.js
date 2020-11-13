@@ -57,6 +57,20 @@ class CosmosBuilder extends Builder {
                 msgs[msgs.length] = Issue.CreateMsgIssue(req);
                 break;
             }
+            // gridDapp TX
+            case 'MsgDappCreateGrid': {
+                msgs[msgs.length] = Issue.CreateMsgIssue(req);
+                break;
+            }
+            case 'MsgDappDeposit': {
+                msgs[msgs.length] = Issue.CreateMsgIssue(req);
+                break;
+            }
+            case 'MsgDappWithdraw': {
+                msgs[msgs.length] = Issue.CreateMsgIssue(req);
+                break;
+            }
+            //
             default: {
                 throw new Error('not exist tx type');
             }

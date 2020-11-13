@@ -41,16 +41,16 @@
             :src="minePng"
             alt=""
           >
-          <p class="number">{{(i.total_number)}}</p>
+          <p class="number">HEALTH: {{(i.total_number)}}</p>
           <p
             class="owner"
             v-if="keyStore.address == i.owner"
             style="color: blue;"
-          >{{i.owner | gardAddr}}</p>
+          >owner: {{i.owner | gardAddr}}</p>
           <p
             class="owner"
             v-else
-          >{{i.owner | gardAddr}}</p>
+          >owner: {{i.owner | gardAddr}}</p>
           <div class="action">
             <el-button
               class="btn"
@@ -61,7 +61,20 @@
         </div>
       </div>
     </div>
-    <el-button class="withdraw">一键收获</el-button>
+    <div
+      class="bottom-btn-div"
+      v-if="!isDisabled"
+    >
+      <el-button
+        class="withdraw"
+        @click="widthdraw"
+      >一键收获</el-button>
+      <el-button
+        class="withdraw"
+        @click="goReward"
+      >收获历史</el-button>
+    </div>
+
     <el-dialog
       title="Please buy a mine"
       :visible.sync="dialogVisible1"
@@ -78,6 +91,9 @@
             <span>Balance: {{GGTBalance.amount | formatNumber}}GGT</span>
             <!-- <span @click="delegateAll">All</span> -->
           </p>
+          <p class="input-info">
+            <span>Area: {{this.minDeposit.amount}}-{{this.maxDeposit.amount}}GGT</span>
+          </p>
           <el-input
             v-model="form.amount"
             placeholder="Amount"
@@ -90,7 +106,7 @@
             :placeholder="$t('create.pass')"
             @keyup.enter.native="onSend(false)"
           ></el-input>
-          <p>手续费: 1GARD</p>
+          <p>手续费: {{getViewToken(dappFees.deposit_fee, tokenMap).amount}}GARD</p>
         </el-form-item>
       </el-form>
 
@@ -100,6 +116,29 @@
       >
         <el-button
           @click="onSend(false)"
+          class="ok-btn"
+        >{{$t('global.ok')}}</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      :title="$t('create.pass')"
+      :visible.sync="dialogVisible"
+      width="360px"
+      :close-on-click-modal="false"
+    >
+      <el-input
+        type="password"
+        v-model="pass"
+        :placeholder="$t('create.pass')"
+        @keyup.enter.native="onWithdraw(false)"
+      ></el-input>
+      <p>手续费: {{getViewToken(dappFees.withdraw_rewards_fee, tokenMap).amount}}GARD</p>
+      <span
+        slot="footer"
+        class="dialog-footer"
+      >
+        <el-button
+          @click="onWithdraw(false)"
           class="ok-btn"
         >{{$t('global.ok')}}</el-button>
       </span>
@@ -139,12 +178,19 @@ export default {
       rules: {
         amount: [{ validator: validateAmount, trigger: "blur" }]
       },
-      dialogVisible1: false
+      dialogVisible1: false,
+      dialogVisible: false,
+      pass: ""
     };
   },
   computed: {
     ...mapState("account", ["tokenMap", "balance", "mathAccount", "keyStore"]),
-    ...mapState("grid", ["dappIssueDetail", "dappDetail"]),
+    ...mapState("grid", [
+      "dappIssueDetail",
+      "dappDetail",
+      "lastBlock",
+      "dappFees"
+    ]),
     mineList() {
       if (!isEmpty(this.dappIssueDetail.items)) {
         let result = [].concat(this.dappIssueDetail.items);
@@ -211,17 +257,74 @@ export default {
     },
     maxDeposit() {
       return getViewToken(this.dappDetail.max_per_deposit, this.tokenMap);
+    },
+    isDisabled() {
+      if (
+        parseInt(this.lastBlock) >=
+        parseInt(this.dappIssueDetail.height) +
+          parseInt(this.maxBlocksGridCreate) +
+          parseInt(this.maxBlocksGridDeposit)
+      ) {
+        return false;
+      } else {
+        return true;
+      }
+    },
+    maxBlocksGridCreate() {
+      return this.dappDetail.max_blocks_grid_create;
+    },
+    maxBlocksGridDeposit() {
+      return this.dappDetail.max_blocks_grid_deposit;
     }
   },
   methods: {
+    getViewToken,
     enterDapp(index) {
       this.$router.push({
         path: `/dapp/gridDetail?dappId=${this.$route.query.dappId}&gridId=${this.$route.query.gridId}&index=${index}`
       });
     },
-    deposit(index) {
+    async deposit(index) {
+      const currentBlock = await this.$store.dispatch("grid/fetchLastBlock");
       this.index = index;
-      if (this.GARDBalance.amount < 1) {
+      // 如果抢占期不能质押
+      if (!this.dappDetail.grid_create_can_deposit) {
+        if (
+          parseInt(currentBlock) <
+          parseInt(this.dappIssueDetail.height) +
+            parseInt(this.maxBlocksGridCreate)
+        ) {
+          this.$message.error("抢占期未结束不能质押");
+          return;
+        }
+      }
+      if (
+        parseInt(currentBlock) >=
+        parseInt(this.dappIssueDetail.height) +
+          parseInt(this.maxBlocksGridCreate) +
+          parseInt(this.maxBlocksGridDeposit)
+      ) {
+        this.$message.error("质押期已过");
+        return;
+      }
+      if (this.dappIssueDetail.items.length <= 1) {
+        this.$message.error("当前格子数不足，请等待其他人抢占");
+        return;
+      }
+      const maxNum = parseInt(this.dappDetail.per_grid_max_deposits);
+      const indexInfo = this.dappIssueDetail.items.filter(i => {
+        return i.index == index;
+      });
+      if (!isEmpty(indexInfo[0].deposits)) {
+        if (indexInfo[0].deposits.length >= maxNum) {
+          this.$message.error("当前格子存款次数已达上限");
+          return;
+        }
+      }
+      if (
+        this.GARDBalance.amount <
+        getViewToken(this.dappFees.deposit_fee, this.tokenMap).amount
+      ) {
         this.$message.error("手续费不足");
         return;
       }
@@ -232,6 +335,7 @@ export default {
       }
       // else use local wallet
       this.form.pass = "";
+      this.form.amount = "";
       this.dialogVisible1 = true;
     },
     onSend: throttle(
@@ -281,6 +385,7 @@ export default {
               center: true,
               duration: 1000,
               onClose: () => {
+                this.dialogVisible1 = false;
                 this.getData();
               }
             });
@@ -299,6 +404,89 @@ export default {
       1500,
       { trailing: false }
     ),
+    widthdraw() {
+      if (
+        this.GARDBalance.amount <
+        getViewToken(this.dappFees.withdraw_rewards_fee, this.tokenMap).amount
+      ) {
+        this.$message.error("手续费不足");
+        return;
+      }
+      // use math wallet
+      if (!isEmpty(this.mathAccount)) {
+        this.onWithdraw(true);
+        return;
+      }
+      // else use local wallet
+      this.dialogVisible = true;
+      this.pass = "";
+    },
+    onWithdraw: throttle(
+      async function(useMathWallet) {
+        if (!useMathWallet && !this.pass) {
+          this.$message({
+            type: "error",
+            message: this.$t("global.required", {
+              name: this.$t("create.pass")
+            }),
+            center: true
+          });
+          return false;
+        }
+        const loading = this.$loading({
+          lock: true,
+          text: "Loading",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.7)"
+        });
+        const params = {
+          dappId: this.$route.query.dappId,
+          pass: this.pass,
+          gridId: this.$route.query.gridId
+        };
+        let res = "";
+        try {
+          res = await this.$store.dispatch("grid/dappWithdraw", params);
+        } catch (e) {
+          this.$message({
+            type: "error",
+            message: this.$t(`send.error`),
+            center: true
+          });
+        }
+        if (res.txhash) {
+          const txStatus = await handleTxReturn(res);
+          if (txStatus) {
+            this.$message({
+              type: "success",
+              message: `操作成功！`,
+              center: true,
+              duration: 1000,
+              onClose: () => {
+                this.dialogVisible = false;
+                this.getData();
+              }
+            });
+          } else {
+          }
+          this.dialogVisible1 = false;
+        } else {
+          this.$message({
+            type: "error",
+            message: this.$t(`send.${res}`),
+            center: true
+          });
+        }
+        loading.close();
+      },
+      1500,
+      { trailing: false }
+    ),
+    goReward() {
+      this.$router.push({
+        path: `/dapp/rewards?dappId=${this.$route.query.dappId}&gridId=${this.$route.query.gridId}`
+      });
+    },
     getData() {
       this.$store.dispatch("grid/fetchDappIssueDetail", {
         dappId: this.$route.query.dappId,
@@ -308,6 +496,8 @@ export default {
         dappId: this.$route.query.dappId
       });
       this.$store.dispatch("account/fetchBalance");
+      this.$store.dispatch("grid/fetchLastBlock");
+      this.$store.dispatch("grid/fetchDappFees");
     }
   },
   mounted() {
@@ -339,17 +529,17 @@ export default {
   background: #fff;
   padding: 20px;
   > .demo-item {
-    width: 30%;
+    width: 28%;
     display: inline-block;
     cursor: pointer;
 
     border-radius: 6px;
-    border: 1px solid #999;
+    // border: 1px solid #999;
     margin-bottom: 10px;
     vertical-align: middle;
 
     &:nth-child(3n-1) {
-      margin: 0 5% 10px;
+      margin: 0 8% 10px;
     }
     &:nth-child(7) {
       margin-bottom: 0;
@@ -372,6 +562,7 @@ export default {
       }
       .action {
         .btn {
+          border: 1px solid #e6e6e6;
           &:hover {
             color: #fff;
             background: linear-gradient(90deg, #38b5c2 0%, #406096 100%);
@@ -386,10 +577,13 @@ export default {
     .number {
       color: #444;
       font-size: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #f3f1ee;
     }
     .owner {
       color: #666;
       font-size: 14px;
+      margin: 15px 0 15px;
     }
     .action {
       display: flex;
@@ -407,18 +601,34 @@ export default {
     }
   }
 }
+.bottom-btn-div {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-top: 20px;
+  .withdraw {
+    height: 48px;
+    font-size: 16px;
+    color: #406096;
+    background: #fff;
+    box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.1);
+    width: 200px;
+    border: none;
+    &:hover {
+      color: #fff;
+      background: linear-gradient(90deg, #38b5c2 0%, #406096 100%);
+      box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
 .empty {
   color: #bfbfbf;
   text-align: center;
 }
-.withdraw {
-  height: 48px;
-  color: #fff;
-  background: linear-gradient(90deg, #38b5c2 0%, #406096 100%);
-  box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.1);
+.ok-btn {
   width: 100%;
-  border: none;
-  margin-top: 20px;
+  background: $main-btn;
+  color: #fff;
 }
 @include responsive($sm) {
   .page-container {

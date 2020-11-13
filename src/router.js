@@ -54,6 +54,8 @@ import Dapp from "./views/Dapp/index.vue"
 import DappList from "./views/Dapp/list.vue"
 import IssueList from "./views/Dapp/issueList.vue"
 import IssueDetail from "./views/Dapp/issueDetail.vue"
+import GridDetail from "./views/Dapp/gridDetail.vue"
+import Rewards from "./views/Dapp/rewards.vue"
 // 
 // 解决两次访问相同路由地址报错
 const originalPush = Router.prototype.push;
@@ -267,6 +269,14 @@ export default new Router({
         {
           path: 'issueDetail',
           component: IssueDetail
+        },
+        {
+          path: 'gridDetail',
+          component: GridDetail
+        },
+        {
+          path: 'rewards',
+          component: Rewards
         }
       ]
     },
