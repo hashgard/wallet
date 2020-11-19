@@ -15,27 +15,31 @@
           <div class="top-right-top">
             <div class="top-item">
               <p class="value">{{$route.query.gridId}}</p>
-              <p class="name">POOL</p>
+              <p class="name">矿山ID</p>
             </div>
             <div class="top-item">
               <p class="value">{{$route.query.index}}</p>
-              <p class="name">NUMBER</p>
+              <p class="name">矿池ID</p>
             </div>
             <div class="top-item">
               <p class="value">{{totalNumber}}</p>
-              <p class="name">HEALTH</p>
+              <p class="name">矿池健康值</p>
             </div>
             <div class="top-item">
               <p class="value">{{depositAmount.amount | formatNumber}}</p>
-              <p class="name">DEPOST AMOUNT</p>
+              <p class="name">入股总额</p>
             </div>
           </div>
           <div class="top-right-bottom">
-            <p>OWNER: </p>
-            <s-address
-              :address="indexOwner"
-              :ellipsis="true"
-            />
+            <div class="owner">
+              <p style="margin-right: 3px;">矿主: </p>
+              <s-address
+                :address="indexOwner"
+                :ellipsis="true"
+              />
+            </div>
+            <div>占领花费: {{ownerDeposit.amount | formatNumber}}{{ownerDeposit.denom}}</div>
+            <div>矿池初始健康值: <span :class="[ownerNumber > 0 ? 'green' : 'red']">{{ownerNumber}}</span></div>
           </div>
         </div>
       </div>
@@ -44,32 +48,16 @@
       class="table-content"
       v-if="!isEmpty(dappIssueDetail)"
     >
-      <el-checkbox
+      <!-- <el-checkbox
         v-model="isMy"
         style="margin-bottom: 10px;"
-      >只显示我的Deposit</el-checkbox>
+      >只显示我的Deposit</el-checkbox> -->
       <div class="table-header table-header-nav">
-        <div class="header-operator">Operator</div>
-        <div class="header-action">Action</div>
-        <div class="header-consume">Consume</div>
-        <div class="header-pool">Luck Pool</div>
-        <div class="header-value">Cultivation Value</div>
-      </div>
-      <div
-        class="table-header table-header-hover"
-        style="background: blanchedalmond;"
-      >
-        <div
-          class="header-operator"
-          @click="goAddress(indexOwner)"
-        >{{handleAddress(indexOwner)}}</div>
-        <div class="header-action">Create</div>
-        <div class="header-consume">{{ownerDeposit.amount | formatNumber}}{{ownerDeposit.denom}}</div>
-        <div class="header-pool">-</div>
-        <div
-          class="header-value"
-          :class="[ownerNumber > 0 ? 'green' : 'red']"
-        >{{ownerNumber}}</div>
+        <div class="header-operator">股东</div>
+        <div class="header-action">投入资金</div>
+        <div class="header-consume">保险池</div>
+        <div class="header-pool">实际入股</div>
+        <div class="header-value">健康值加成</div>
       </div>
       <div
         class="table-header table-header-hover"
@@ -80,14 +68,18 @@
           class="header-operator"
           @click="goAddress(i.address)"
         >{{handleAddress(i.address)}}</div>
-        <div class="header-action">Deposit</div>
-        <div class="header-consume">{{handleDeposit(i.deposit_amount, i.pool_amount) | formatNumber}} GGT</div>
-        <div class="header-pool">{{handlePool(i.pool_amount).amount | formatNumber}}{{handlePool(i.pool_amount).denom}}</div>
+        <div class="header-action">{{handleDeposit(i.deposit_amount, i.pool_amount) | formatNumber}} GGT</div>
+        <div class="header-consume">{{handlePool(i.pool_amount).amount | formatNumber}} {{handlePool(i.pool_amount).denom}}</div>
+        <div class="header-pool">{{parseFloat(handleDeposit(i.deposit_amount, i.pool_amount)) - handlePool(i.pool_amount).amount}} GGT</div>
         <div
           class="header-value"
           :class="[i.number > 0 ? 'green' : 'red']"
         >{{i.number}}</div>
       </div>
+      <div
+        class="table-header"
+        v-if="depositList.length == 0"
+      >{{$t("global.null2")}}</div>
     </div>
     <div class="page-div">
       <el-pagination
@@ -266,7 +258,7 @@ export default {
 
 .content {
   background: #fff;
-  padding: 20px;
+  padding: 30px 20px;
   border-radius: 6px;
   > .top {
     display: flex;
@@ -309,11 +301,19 @@ export default {
         }
       }
       > .top-right-bottom {
-        display: flex;
-        align-items: center;
+        color: #777;
+        padding-top: 5px;
+        > .owner {
+          display: flex;
+          align-items: center;
+        }
         > p {
           margin-right: 10px;
           color: #777777;
+        }
+        > div {
+          font-size: 16px;
+          padding: 5px 0;
         }
       }
     }

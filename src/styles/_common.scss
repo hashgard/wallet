@@ -274,4 +274,18 @@ a:active {
   .el-pagination__total {
     color: #fff;
   }
+
+  .el-pagination.is-background .el-pager li:not(.disabled).active {
+    background-color: #14286e;
+  }
+}
+
+.issueList-container {
+  .el-pagination__total {
+    color: #fff;
+  }
+
+  .el-pagination.is-background .el-pager li:not(.disabled).active {
+    background-color: #14286e;
+  }
 }

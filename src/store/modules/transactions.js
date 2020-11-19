@@ -341,6 +341,23 @@ export default {
       } = await sendTx(context, pass, 'transfer', msg);
       return Promise.resolve(data);
     },
+    //方便向多个地址转账
+    sendMore: async function (context, params) {
+      const msg = {
+        memo:params.memo,
+        to: params.address,
+        coins: [{
+          denom: params.denom,
+          amount:params.amount
+        }]
+      };
+      
+      const {
+        data
+      } = await sendTx(context, params.pass, 'transfer', msg);
+      return Promise.resolve(data);
+    },
+    //
     drawGard: async function (context) {
       const address = context.rootGetters['account/currentAddress'];
       const msg = {

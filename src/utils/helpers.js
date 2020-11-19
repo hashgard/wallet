@@ -187,7 +187,7 @@ export const sendTx = async function (context, pass, type, msg, msgs) {
   return Promise.resolve(res);
 };
 const getTxPara = (from, type, accState, nodeInfo, msg, msgs) => {
-  const dappFees = JSON.parse(sessionStorage.getItem("dappFees")) || {}
+  // const dappFees = JSON.parse(sessionStorage.getItem("dappFees")) || {}
   // const feesAmount = {
   //   "withdraw_delegation_rewards_all": '10000000',
   //   "withdraw_delegator_reward": '10000000',
@@ -195,13 +195,6 @@ const getTxPara = (from, type, accState, nodeInfo, msg, msgs) => {
   //   "MsgDappDeposit": dappFees.deposit_fee.amount,
   //   "MsgDappWithdraw": dappFees.withdraw_rewards_fee.amount
   // }
-  const feesAmount = {
-    "withdraw_delegation_rewards_all": '10000000',
-    "withdraw_delegator_reward": '10000000',
-    "MsgDappCreateGrid": "0",
-    "MsgDappDeposit": "0",
-    "MsgDappWithdraw": "0"
-  }
   return {
     chain_id: nodeInfo.node_info.network,
     from,
@@ -210,7 +203,7 @@ const getTxPara = (from, type, accState, nodeInfo, msg, msgs) => {
     memo: msg.memo || '',
     fees: {
       denom: 'ugard',
-      amount: (type == 'withdraw_delegation_rewards_all' || type == 'withdraw_delegator_reward' || type == 'MsgDappCreateGrid' || type == 'MsgDappDeposit' || type == 'MsgDappWithdraw') ? feesAmount[type] : '1000000'
+      amount: (type == 'withdraw_delegation_rewards_all' || type == 'withdraw_delegator_reward') ? "10000000" : '1000000'
     },
     gas: type == 'transfer' ? '200000' : '5000000',
     type,

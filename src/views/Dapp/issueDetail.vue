@@ -11,24 +11,24 @@
           v-if="i.disabled"
           class="disabled"
         >
-          <img
-            :src="minePng"
-            alt=""
-          >
-          <p
-            class="number"
-            style="color: gray;"
-          >暂无</p>
+          <div class="img-div">
+            <img
+              :src="minePng"
+              alt=""
+            >
+          </div>
+
+          <p class="number">矿池健康值: <br>暂无</p>
           <p
             class="owner"
             style="color: gray;"
-          >暂无</p>
+          >未被占领</p>
           <div class="action">
             <el-button
               class="btn"
               size="small"
               disabled
-            >质 押</el-button>
+            >开 采</el-button>
           </div>
         </div>
         <!-- 已抢占 -->
@@ -37,26 +37,35 @@
           class="disabled-no"
           @click="enterDapp(i.index)"
         >
-          <img
-            :src="minePng"
-            alt=""
-          >
-          <p class="number">HEALTH: {{(i.total_number)}}</p>
+          <div class="img-div">
+            <img
+              :src="imgType[i.index]"
+              alt=""
+            >
+            <img
+              v-if="myDepositJudge(i.index)"
+              class="tag"
+              :src="tagSvg"
+              alt=""
+            >
+          </div>
+
+          <p class="number">矿池健康值: <br>{{(i.total_number)}}</p>
           <p
             class="owner"
             v-if="keyStore.address == i.owner"
             style="color: blue;"
-          >owner: {{i.owner | gardAddr}}</p>
+          >矿主: {{i.owner | gardAddr}}</p>
           <p
             class="owner"
             v-else
-          >owner: {{i.owner | gardAddr}}</p>
+          >矿主: {{i.owner | gardAddr}}</p>
           <div class="action">
             <el-button
               class="btn"
               size="small"
               @click.stop="deposit(i.index)"
-            >质 押</el-button>
+            >开 采</el-button>
           </div>
         </div>
       </div>
@@ -76,7 +85,7 @@
     </div>
 
     <el-dialog
-      title="Please buy a mine"
+      title="开采"
       :visible.sync="dialogVisible1"
       width="360px"
       :close-on-click-modal="false"
@@ -106,7 +115,8 @@
             :placeholder="$t('create.pass')"
             @keyup.enter.native="onSend(false)"
           ></el-input>
-          <p>手续费: {{getViewToken(dappFees.deposit_fee, tokenMap).amount}}GARD</p>
+          <!-- <p>应用费: {{getViewToken(dappFees.deposit_fee, tokenMap).amount}}GARD</p> -->
+          <p>gas费: 1GARD</p>
         </el-form-item>
       </el-form>
 
@@ -121,7 +131,7 @@
       </span>
     </el-dialog>
     <el-dialog
-      :title="$t('create.pass')"
+      title="收获"
       :visible.sync="dialogVisible"
       width="360px"
       :close-on-click-modal="false"
@@ -132,7 +142,8 @@
         :placeholder="$t('create.pass')"
         @keyup.enter.native="onWithdraw(false)"
       ></el-input>
-      <p>手续费: {{getViewToken(dappFees.withdraw_rewards_fee, tokenMap).amount}}GARD</p>
+      <!-- <p>应用费: {{getViewToken(dappFees.withdraw_rewards_fee, tokenMap).amount}}GARD</p> -->
+      <p>gas费: 1GARD</p>
       <span
         slot="footer"
         class="dialog-footer"
@@ -151,6 +162,16 @@ import { getViewToken, handleTxReturn } from "@/utils/helpers";
 import BigNumber from "bignumber.js";
 import { get, isEmpty, throttle } from "lodash";
 import minePng from "@/assets/mine.png";
+import mine9Png from "@/assets/mine-9.png";
+import mine8Png from "@/assets/mine-8.png";
+import mine7Png from "@/assets/mine-7.png";
+import mine6Png from "@/assets/mine-6.png";
+import mine5Png from "@/assets/mine-5.png";
+import mine4Png from "@/assets/mine-4.png";
+import mine3Png from "@/assets/mine-3.png";
+import mine2Png from "@/assets/mine-2.png";
+import mine1Png from "@/assets/mine-1.png";
+import tagSvg from "@/assets/tag.svg";
 export default {
   name: "issueDetail",
   data() {
@@ -170,7 +191,19 @@ export default {
       callback();
     };
     return {
+      tagSvg,
       minePng,
+      imgType: {
+        "1": mine1Png,
+        "2": mine2Png,
+        "3": mine3Png,
+        "4": mine4Png,
+        "5": mine5Png,
+        "6": mine6Png,
+        "7": mine7Png,
+        "8": mine8Png,
+        "0": mine9Png
+      },
       form: {
         amount: "",
         pass: ""
@@ -275,6 +308,25 @@ export default {
     },
     maxBlocksGridDeposit() {
       return this.dappDetail.max_blocks_grid_deposit;
+    },
+    myDepositJudge() {
+      return function(index) {
+        const result = this.dappIssueDetail.items.filter(i => {
+          return i.index == index;
+        });
+        if (!isEmpty(result[0].deposits)) {
+          const myDeposit = result[0].deposits.filter(k => {
+            return this.keyStore.address == k.split("_")[0];
+          });
+          if (myDeposit.length > 0) {
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      };
     }
   },
   methods: {
@@ -294,7 +346,7 @@ export default {
           parseInt(this.dappIssueDetail.height) +
             parseInt(this.maxBlocksGridCreate)
         ) {
-          this.$message.error("抢占期未结束不能质押");
+          this.$message.error("抢占期未结束不能开采");
           return;
         }
       }
@@ -304,7 +356,7 @@ export default {
           parseInt(this.maxBlocksGridCreate) +
           parseInt(this.maxBlocksGridDeposit)
       ) {
-        this.$message.error("质押期已过");
+        this.$message.error("采矿期已过，无法继续开采");
         return;
       }
       if (this.dappIssueDetail.items.length <= 1) {
@@ -323,9 +375,12 @@ export default {
       }
       if (
         this.GARDBalance.amount <
-        getViewToken(this.dappFees.deposit_fee, this.tokenMap).amount
+        parseInt(
+          getViewToken(this.dappFees.deposit_fee, this.tokenMap).amount
+        ) +
+          1
       ) {
-        this.$message.error("手续费不足");
+        this.$message.error("应用费不足");
         return;
       }
       // use math wallet
@@ -407,9 +462,12 @@ export default {
     widthdraw() {
       if (
         this.GARDBalance.amount <
-        getViewToken(this.dappFees.withdraw_rewards_fee, this.tokenMap).amount
+        parseInt(
+          getViewToken(this.dappFees.withdraw_rewards_fee, this.tokenMap).amount
+        ) +
+          1
       ) {
-        this.$message.error("手续费不足");
+        this.$message.error("应用费不足");
         return;
       }
       // use math wallet
@@ -598,6 +656,15 @@ export default {
     }
     img {
       width: 100%;
+    }
+    .img-div {
+      position: relative;
+      > .tag {
+        position: absolute;
+        top: 0;
+        right: -5px;
+        width: 26px;
+      }
     }
   }
 }

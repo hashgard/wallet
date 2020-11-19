@@ -1,11 +1,27 @@
 <template>
-  <div class="balance-container">
-    <div>
+  <div class="balance-container issueList-container">
+    <div v-if="!isEmpty(dappIssueList)">
       <div class="table-header table-header-nav">
-        <div class="header-id">Issue ID</div>
-        <div class="header-denom">Begin Height</div>
-        <!-- <div class="header-amount">Status</div> -->
-        <div class="header-action">Action</div>
+        <div class="header-id">矿山 ID</div>
+        <div class="header-denom">开始高度</div>
+        <div class="header-amount">状态</div>
+        <div class="header-action"></div>
+      </div>
+      <div
+        v-if="currentPage == 1 && status(dappIssueList[0].height) != '抢占期'"
+        class="table-header table-header-hover"
+      >
+        <div class="header-id">{{parseInt(dappIssueList[0].id) + 1}}</div>
+        <div class="header-denom">-</div>
+        <div class="header-amount">
+          <span class="green">抢占期</span>
+        </div>
+        <div class="header-action">
+          <p
+            class="action-span"
+            @click="buyNew"
+          >抢占</p>
+        </div>
       </div>
       <div
         class="table-header table-header-hover"
@@ -14,40 +30,65 @@
       >
         <div class="header-id">{{item.id}}</div>
         <div class="header-denom">{{item.height}}</div>
-        <!-- <div class="header-amount"></div> -->
-        <div class="header-action">
-          <el-button
-            v-if="pageWidth > 414"
-            size="small"
+        <div
+          class="header-amount"
+          v-if="lastBlock"
+        >
+          <span :class="status(item.height) == '抢占期' ? 'green' : (status(item.height) == '收获期' ? 'gold' : 'blue')">{{status(item.height)}}</span>
+        </div>
+        <div
+          class="header-action"
+          v-if="lastBlock"
+        >
+          <p
+            class="action-span"
             @click="goIssue(item.id)"
-          >进 入</el-button>
-          <el-button
-            v-else
-            size="small"
-            @click="goIssue(item.id)"
-          >→</el-button>
+          >进入</p>
+          <p
+            class="action-span"
+            v-if="status(item.height) == '抢占期'"
+            @click="buy(item.height)"
+          >抢占</p>
+          <p
+            class="action-span"
+            v-if="status(item.height) == '收获期'"
+            @click="widthdraw(item.id)"
+          >收获</p>
+          <p
+            class="action-span"
+            v-if="status(item.height) == '收获期'"
+            @click="goReward(item.id)"
+          >收获历史</p>
         </div>
       </div>
       <div
         class="table-header"
         v-if="dappIssueList.length == 0"
       >{{$t("global.null2")}}</div>
-      <p
-        class="loadMore"
-        v-if="isLoadMore"
-        @click="loadMore"
-      >加载更多</p>
+      <div class="page-div">
+        <el-pagination
+          background
+          :pager-count="5"
+          layout="total,prev, pager, next"
+          :current-page="currentPage"
+          :page-size="pageSize"
+          :total="dappIssueAccount"
+          @prev-click="onPageChange"
+          @next-click="onPageChange"
+          @current-change="onPageChange"
+        />
+      </div>
     </div>
-    <div class="action-div">
+    <!-- <div class="action-div">
       <el-button class="ok-btn">How to play</el-button>
       <el-button
         class="ok-btn"
         @click="buy"
       >Buy</el-button>
-    </div>
+    </div> -->
     <!-- buy -->
     <el-dialog
-      title="Please buy a mine"
+      title="抢占矿池"
       :visible.sync="dialogVisible1"
       width="360px"
       :close-on-click-modal="false"
@@ -74,7 +115,8 @@
             :placeholder="$t('create.pass')"
             @keyup.enter.native="onSend(false)"
           ></el-input>
-          <p>手续费: {{getViewToken(dappFees.create_grid_fee,tokenMap).amount}}GARD</p>
+          <!-- <p>应用费: {{getViewToken(dappFees.create_grid_fee,tokenMap).amount}}GARD</p> -->
+          <p>gas费: 1GARD</p>
         </el-form-item>
       </el-form>
 
@@ -84,6 +126,30 @@
       >
         <el-button
           @click="onSend(false)"
+          class="ok-btn"
+        >{{$t('global.ok')}}</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      title="收获"
+      :visible.sync="dialogVisible"
+      width="360px"
+      :close-on-click-modal="false"
+    >
+      <el-input
+        type="password"
+        v-model="pass"
+        :placeholder="$t('create.pass')"
+        @keyup.enter.native="onWithdraw(false)"
+      ></el-input>
+      <!-- <p>应用费: {{getViewToken(dappFees.withdraw_rewards_fee, tokenMap).amount}}GARD</p> -->
+      <p>gas费: 1GARD</p>
+      <span
+        slot="footer"
+        class="dialog-footer"
+      >
+        <el-button
+          @click="onWithdraw(false)"
           class="ok-btn"
         >{{$t('global.ok')}}</el-button>
       </span>
@@ -116,12 +182,23 @@ export default {
       rules: {
         amount: [{ validator: validateAmount, trigger: "blur" }]
       },
-      dialogVisible1: false
+      dialogVisible1: false,
+      currentPage: 1,
+      pageSize: 10,
+      dialogVisible: false,
+      pass: ""
     };
   },
   computed: {
     ...mapState("account", ["tokenMap", "balance", "mathAccount"]),
-    ...mapState("grid", ["dappIssueList", "dappDetail", "dappFees"]),
+    ...mapState("grid", [
+      "dappIssueList",
+      "dappDetail",
+      "dappFees",
+      "dappIssueAccount",
+      "lastBlock",
+      "dappIssueListAll"
+    ]),
     viewBalance() {
       if (sessionStorage.getItem("boxAmount")) {
         return [JSON.parse(sessionStorage.getItem("boxAmount"))];
@@ -171,25 +248,36 @@ export default {
     maxBlocksGridCreate() {
       return this.dappDetail.max_blocks_grid_create;
     },
+    maxBlocksGridDeposit() {
+      return this.dappDetail.max_blocks_grid_deposit;
+    },
     lastIssueStartHeight() {
       return this.dappIssueList[0].height;
     },
-    isLoadMore() {
-      if (!isEmpty(this.dappIssueList)) {
-        if (
-          parseInt(this.dappIssueList[this.dappIssueList.length - 1].id) - 1 <=
-          0
-        )
-          return false;
-        return true;
-      }
+    status() {
+      return function(startHeight) {
+        const creat_end =
+          parseInt(this.maxBlocksGridCreate) + parseInt(startHeight);
+        const deposit_end = parseInt(this.maxBlocksGridDeposit) + creat_end;
+        if (parseInt(this.lastBlock) >= deposit_end) {
+          return "收获期";
+        } else if (parseInt(this.lastBlock) <= creat_end) {
+          return "抢占期";
+        } else {
+          return "开采期";
+        }
+      };
     }
   },
-  mounted() {
+  async mounted() {
+    await this.$store.dispatch("grid/fetchDappIssueListAll", {
+      dappId: this.$route.query.dappId
+    });
     this.$store.dispatch("grid/fetchDappIssueList", {
       dappId: this.$route.query.dappId,
       startId: 0
     });
+    this.$store.dispatch("grid/fetchLastBlock");
     this.$store.dispatch("grid/fetchDappDetail", {
       dappId: this.$route.query.dappId
     });
@@ -197,6 +285,7 @@ export default {
     this.$store.dispatch("grid/fetchDappFees");
   },
   methods: {
+    isEmpty,
     getViewToken,
     goIssue(id) {
       this.$router.push({
@@ -209,21 +298,61 @@ export default {
     delegateAll() {
       this.form.amount = this.GGTBalance.amount;
     },
-    loadMore() {
+    async onPageChange(page) {
+      this.currentPage = page;
+      if (page == 1) {
+        await this.$store.dispatch("grid/fetchDappIssueListAll", {
+          dappId: this.$route.query.dappId
+        });
+        this.$store.dispatch("grid/fetchDappIssueList", {
+          dappId: this.$route.query.dappId,
+          startId: 0
+        });
+        return;
+      }
+      const startId = this.dappIssueListAll[(page - 1) * 10].id;
       this.$store.dispatch("grid/fetchDappIssueList", {
         dappId: this.$route.query.dappId,
-        startId:
-          parseInt(this.dappIssueList[this.dappIssueList.length - 1].id) - 1
+        startId
       });
     },
-    async buy() {
+    goReward(gridId) {
+      this.$router.push({
+        path: `/dapp/rewards?dappId=${this.$route.query.dappId}&gridId=${gridId}`
+      });
+    },
+    buyNew() {
+      const ggt = getViewToken(
+        this.dappDetail.owner_min_deposit,
+        this.tokenMap
+      );
+      this.form.amount = ggt.amount;
+      if (
+        this.GARDBalance.amount <
+        parseInt(
+          getViewToken(this.dappFees.create_grid_fee, this.tokenMap).amount
+        ) +
+          1
+      ) {
+        this.$message.error("应用费不足");
+        return;
+      }
+      // use math wallet
+      if (!isEmpty(this.mathAccount)) {
+        this.onSend(true);
+        return;
+      }
+      // else use local wallet
+      this.form.pass = "";
+      this.dialogVisible1 = true;
+    },
+    async buy(startHeight) {
       if (this.dappIssueList.length != 0) {
         const currentHeight = await this.$store.dispatch("grid/fetchLastBlock");
         console.log(currentHeight);
         const blockStatus =
           parseInt(currentHeight) <
-          parseInt(this.lastIssueStartHeight) +
-            parseInt(this.maxBlocksGridCreate)
+          parseInt(startHeight) + parseInt(this.maxBlocksGridCreate)
             ? true
             : false;
         const gridStatus =
@@ -242,9 +371,12 @@ export default {
       this.form.amount = ggt.amount;
       if (
         this.GARDBalance.amount <
-        getViewToken(this.dappFees.create_grid_fee, this.tokenMap).amount
+        parseInt(
+          getViewToken(this.dappFees.create_grid_fee, this.tokenMap).amount
+        ) +
+          1
       ) {
-        this.$message.error("手续费不足");
+        this.$message.error("应用费不足");
         return;
       }
       // use math wallet
@@ -327,11 +459,96 @@ export default {
           this.$message({
             type: "error",
             message: this.$t(`send.${res}`),
-            center: true
+            center: true,
+            onClose:()=> {
+
+            }
           });
-          window.location.reload();
         }
         loading.close();
+      },
+      1500,
+      { trailing: false }
+    ),
+    widthdraw(gridId) {
+      this.gridId = gridId;
+      if (
+        this.GARDBalance.amount <
+        parseInt(
+          getViewToken(this.dappFees.withdraw_rewards_fee, this.tokenMap).amount
+        ) +
+          1
+      ) {
+        this.$message.error("应用费不足");
+        return;
+      }
+      // use math wallet
+      if (!isEmpty(this.mathAccount)) {
+        this.onWithdraw(true);
+        return;
+      }
+      // else use local wallet
+      this.dialogVisible = true;
+      this.pass = "";
+    },
+    onWithdraw: throttle(
+      async function(useMathWallet) {
+        if (!useMathWallet && !this.pass) {
+          this.$message({
+            type: "error",
+            message: this.$t("global.required", {
+              name: this.$t("create.pass")
+            }),
+            center: true
+          });
+          return false;
+        }
+        const loading = this.$loading({
+          lock: true,
+          text: "Loading",
+          spinner: "el-icon-loading",
+          background: "rgba(0, 0, 0, 0.7)"
+        });
+        const params = {
+          dappId: this.$route.query.dappId,
+          pass: this.pass,
+          gridId: this.gridId
+        };
+        let res = "";
+        try {
+          res = await this.$store.dispatch("grid/dappWithdraw", params);
+        } catch (e) {
+          this.$message({
+            type: "error",
+            message: this.$t(`send.error`),
+            center: true
+          });
+        }
+        if (res.txhash) {
+          const txStatus = await handleTxReturn(res);
+          if (txStatus) {
+            this.$message({
+              type: "success",
+              message: `操作成功！`,
+              center: true,
+              duration: 1000,
+              onClose: () => {
+                this.dialogVisible = false;
+                this.getData();
+              }
+            });
+          } else {
+          }
+          this.dialogVisible = false;
+        } else {
+          this.$message({
+            type: "error",
+            message: this.$t(`send.${res}`),
+            center: true
+          });
+        }
+        loading.close();
+        this.gridId = "";
       },
       1500,
       { trailing: false }
@@ -342,7 +559,6 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.handleResize);
-    this.$store.commit("grid/setDappIssueListEmpty");
   }
 };
 </script>
@@ -365,7 +581,19 @@ export default {
       text-overflow: ellipsis;
       white-space: nowrap;
       text-indent: 1em;
-      flex-basis: 33%;
+      // flex-basis: 33%;
+    }
+    > .header-id {
+      flex-basis: 25%;
+    }
+    > .header-denom {
+      flex-basis: 25%;
+    }
+    > .header-amount {
+      flex-basis: 20%;
+    }
+    > .header-action {
+      flex-basis: 30%;
     }
   }
   .table-header-nav {
@@ -375,6 +603,19 @@ export default {
     cursor: pointer;
     &:hover {
       background-color: rgba(242, 246, 252, 1);
+    }
+    .header-action {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      .action-span {
+        font-size: 14px;
+        color: $main-btn;
+        width: 50px;
+        text-align: center;
+        cursor: pointer;
+        font-weight: bolder;
+      }
     }
   }
   .action-div {
@@ -393,9 +634,17 @@ export default {
   color: #fff;
   height: 48px;
 }
-.loadMore {
-  text-align: center;
-  cursor: pointer;
+.page-div {
+  text-align: right;
+}
+.gold {
+  color: #ff8c00;
+}
+.green {
+  color: green;
+}
+.blue {
+  color: blue;
 }
 .input-info {
   display: flex;

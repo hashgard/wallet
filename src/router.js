@@ -24,6 +24,8 @@ import SendConfirm from '@/components/Send/SendConfirm.vue';
 import SendFinish from '@/components/Send/SendFinish.vue';
 import Receive from './views/Receive.vue';
 import SingleTokenAssets from './views/SingleTokenAssets.vue';
+//
+import SendForma from '@/components/Send/SendForma.vue';
 
 import StakingMain from './views/StakingMain.vue';
 import Staking from './views/Staking.vue';
@@ -157,6 +159,10 @@ export default new Router({
       children: [{
           path: 'form',
           component: SendForm
+        },
+        {
+          path: 'forma',
+          component: SendForma
         },
         {
           path: 'confirm',

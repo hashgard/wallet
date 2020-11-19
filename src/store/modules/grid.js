@@ -14,7 +14,9 @@ export default {
     dappIssueDetail: {},
     lastBlock: '',
     gridDepositsListAll: [],
-    dappFees: {}
+    dappFees: {},
+    dappIssueAccount: 0,
+    dappIssueListAll: []
   },
   getters: {
 
@@ -27,7 +29,7 @@ export default {
       state.dappDetail = data
     },
     setDappIssueList(state, data) {
-      state.dappIssueList = [...state.dappIssueList, ...data]
+      state.dappIssueList = data
     },
     setDappIssueDetail(state, data) {
       state.dappIssueDetail = data
@@ -35,14 +37,17 @@ export default {
     setLastBlock(state, data) {
       state.lastBlock = data
     },
-    setDappIssueListEmpty(state) {
-      state.dappIssueList = []
-    },
     setGridDepositsListAll(state, data) {
       state.gridDepositsListAll = data
     },
     setDappFees(state, data) {
       state.dappFees = data
+    },
+    setDappIssueAccount(state, data) {
+      state.dappIssueAccount = data
+    },
+    setDappIssueListAll(state, data) {
+      state.dappIssueListAll = data
     }
   },
   actions: {
@@ -67,6 +72,16 @@ export default {
       return Promise.resolve(data);
     },
     // 获取dapp所有期数
+    async fetchDappIssueListAll(context, params) {
+      const {
+        data
+      } = await ajax.get(`/grid999/grid/list/${params.dappId}/0/9999`);
+      if (!isEmpty(data)) {
+        context.commit("setDappIssueAccount", data.result ? data.result.length : 0);
+        context.commit("setDappIssueListAll", data.result ? data.result : []);
+      }
+    },
+    // 获取dapp所有期数,分页
     async fetchDappIssueList(context, params) {
       const {
         data
