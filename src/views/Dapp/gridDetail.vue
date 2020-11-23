@@ -22,7 +22,7 @@
               <p class="name">矿池ID</p>
             </div>
             <div class="top-item">
-              <p class="value">{{totalNumber}}</p>
+              <p class="value">{{totalNumber | formatNumber}}</p>
               <p class="name">矿池健康值</p>
             </div>
             <div class="top-item">
@@ -39,7 +39,7 @@
               />
             </div>
             <div>占领花费: {{ownerDeposit.amount | formatNumber}}{{ownerDeposit.denom}}</div>
-            <div>矿池初始健康值: <span :class="[ownerNumber > 0 ? 'green' : 'red']">{{ownerNumber}}</span></div>
+            <div>矿池初始健康值: <span :class="[ownerNumber > 0 ? 'green' : 'red']">{{ownerNumber | formatNumber}}</span></div>
           </div>
         </div>
       </div>
@@ -61,6 +61,7 @@
       </div>
       <div
         class="table-header table-header-hover"
+        :class="i.address == keyStore.address ? 'myDeposit' : ''"
         v-for="(i, index) in depositList"
         :key="index"
       >
@@ -74,7 +75,7 @@
         <div
           class="header-value"
           :class="[i.number > 0 ? 'green' : 'red']"
-        >{{i.number}}</div>
+        >{{i.number |formatNumber}}</div>
       </div>
       <div
         class="table-header"
@@ -339,6 +340,9 @@ export default {
       flex-basis: 20%;
     }
   }
+  .myDeposit {
+    background-color: navajowhite;
+  }
   .table-header-nav {
     font-weight: bolder;
   }
@@ -370,5 +374,44 @@ export default {
   .page-container {
     padding: 16px;
   }
+  .content {
+  background: #fff;
+  padding: 30px 20px;
+  border-radius: 6px;
+  > .top {
+    height: inherit;
+    display: block;
+    > .top-left {
+      width: 50%;
+      > img {
+        height: 150px;
+      }
+    }
+    > .top-right {
+      width: 100%;
+      color: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      padding: 0 10px;
+      > .top-right-top {
+        display: block;
+        > .top-item {
+          display: flex;
+          flex-direction: row-reverse;
+          justify-content: space-between;
+          align-items: center;
+          padding: 4px 0;
+          > .name {
+            font-size: 16px;
+          }
+          > .value {
+            font-size: 16px;
+          }
+        }
+      }
+    }
+  }
+}
 }
 </style>

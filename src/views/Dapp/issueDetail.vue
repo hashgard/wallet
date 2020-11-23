@@ -1,6 +1,20 @@
 <template>
   <div class="page-container action-container">
+    <div
+      class="bottom-btn-div"
+      v-if="!isDisabled"
+    >
+      <el-button
+        class="withdraw"
+        @click="judgeWithdraw"
+      >一键收获</el-button>
+      <el-button
+        class="withdraw"
+        @click="goReward"
+      >收获历史</el-button>
+    </div>
     <div class="content">
+      
       <div
         class="demo-item"
         v-for="(i,index) in mineList"
@@ -27,8 +41,9 @@
             <el-button
               class="btn"
               size="small"
-              disabled
-            >开 采</el-button>
+              :disabled="status == '抢占期' ? false : true"
+              @click="buy"
+            >抢 占</el-button>
           </div>
         </div>
         <!-- 已抢占 -->
@@ -50,7 +65,7 @@
             >
           </div>
 
-          <p class="number">矿池健康值: <br>{{(i.total_number)}}</p>
+          <p class="number">矿池健康值: <br>{{i.total_number | formatNumber}}</p>
           <p
             class="owner"
             v-if="keyStore.address == i.owner"
@@ -62,26 +77,14 @@
           >矿主: {{i.owner | gardAddr}}</p>
           <div class="action">
             <el-button
+              :disabled="status == '抢占期' ? true : false"
               class="btn"
               size="small"
               @click.stop="deposit(i.index)"
-            >开 采</el-button>
+            >{{ status == '抢占期' ? '待开采' : '开 采'}}</el-button>
           </div>
         </div>
       </div>
-    </div>
-    <div
-      class="bottom-btn-div"
-      v-if="!isDisabled"
-    >
-      <el-button
-        class="withdraw"
-        @click="widthdraw"
-      >一键收获</el-button>
-      <el-button
-        class="withdraw"
-        @click="goReward"
-      >收获历史</el-button>
     </div>
 
     <el-dialog
@@ -104,16 +107,17 @@
             <span>Area: {{this.minDeposit.amount}}-{{this.maxDeposit.amount}}GGT</span>
           </p>
           <el-input
+          type="number"
             v-model="form.amount"
             placeholder="Amount"
           ></el-input>
         </el-form-item>
-        <el-form-item>
+        <el-form-item v-if="isEmpty(this.mathAccount)">
           <el-input
             type="password"
             v-model="form.pass"
             :placeholder="$t('create.pass')"
-            @keyup.enter.native="onSend(false)"
+            @keyup.enter.native="onSendValidate('form')"
           ></el-input>
           <!-- <p>应用费: {{getViewToken(dappFees.deposit_fee, tokenMap).amount}}GARD</p> -->
           <p>gas费: 1GARD</p>
@@ -125,7 +129,7 @@
         class="dialog-footer"
       >
         <el-button
-          @click="onSend(false)"
+          @click="onSendValidate('form')"
           class="ok-btn"
         >{{$t('global.ok')}}</el-button>
       </span>
@@ -154,13 +158,56 @@
         >{{$t('global.ok')}}</el-button>
       </span>
     </el-dialog>
+    <el-dialog
+      title="抢占矿池"
+      :visible.sync="dialogVisible2"
+      width="360px"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="form1"
+        :model="form1"
+        :rules="rules1"
+      >
+        <el-form-item prop="amount">
+          <p class="input-info">
+            <span>Balance: {{GGTBalance.amount | formatNumber}}GGT</span>
+            <!-- <span @click="delegateAll">All</span> -->
+          </p>
+          <el-input
+            :value="form1.amount"
+            placeholder="Amount"
+          ></el-input>
+        </el-form-item>
+        <el-form-item v-if="isEmpty(this.mathAccount)">
+          <el-input
+            type="password"
+            v-model="form1.pass"
+            :placeholder="$t('create.pass')"
+            @keyup.enter.native="buyGridValidate('form1')"
+          ></el-input>
+          <!-- <p>应用费: {{getViewToken(dappFees.create_grid_fee,tokenMap).amount}}GARD</p> -->
+          <p>gas费: 1GARD</p>
+        </el-form-item>
+      </el-form>
+
+      <span
+        slot="footer"
+        class="dialog-footer"
+      >
+        <el-button
+          @click="buyGridValidate('form1')"
+          class="ok-btn"
+        >{{$t('global.ok')}}</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
 import { mapState } from "vuex";
 import { getViewToken, handleTxReturn } from "@/utils/helpers";
 import BigNumber from "bignumber.js";
-import { get, isEmpty, throttle } from "lodash";
+import { get, isEmpty, throttle, find,findLast } from "lodash";
 import minePng from "@/assets/mine.png";
 import mine9Png from "@/assets/mine-9.png";
 import mine8Png from "@/assets/mine-8.png";
@@ -185,7 +232,16 @@ export default {
         return;
       }
       if (input < minDeposit || input > maxDeposit) {
-        callback(new Error("抵押数量超出限制"));
+        callback(new Error(`Area: ${this.minDeposit.amount}-${this.maxDeposit.amount}`));
+        return;
+      }
+      callback();
+    };
+    const validateAmount1 = (rule, value, callback) => {
+      const input = value - 0;
+      const ggtBalance = this.GGTBalance.amount - 0;
+      if (input > ggtBalance) {
+        callback(new Error(this.$t("send.amountWarn")));
         return;
       }
       callback();
@@ -213,6 +269,14 @@ export default {
       },
       dialogVisible1: false,
       dialogVisible: false,
+      dialogVisible2: false,
+      form1: {
+        amount: "",
+        pass: ""
+      },
+      rules1: {
+        amount: [{ validator: validateAmount1, trigger: "blur" }]
+      },
       pass: ""
     };
   },
@@ -309,6 +373,18 @@ export default {
     maxBlocksGridDeposit() {
       return this.dappDetail.max_blocks_grid_deposit;
     },
+    status() {
+      const creat_end =
+        parseInt(this.maxBlocksGridCreate) + parseInt(this.dappIssueDetail.height);
+      const deposit_end = parseInt(this.maxBlocksGridDeposit) + creat_end;
+      if (parseInt(this.lastBlock) >= deposit_end) {
+        return "收获期";
+      } else if (parseInt(this.lastBlock) <= creat_end) {
+        return "抢占期";
+      } else {
+        return "开采期";
+      }
+    },
     myDepositJudge() {
       return function(index) {
         const result = this.dappIssueDetail.items.filter(i => {
@@ -330,11 +406,139 @@ export default {
     }
   },
   methods: {
+    isEmpty,
     getViewToken,
     enterDapp(index) {
       this.$router.push({
         path: `/dapp/gridDetail?dappId=${this.$route.query.dappId}&gridId=${this.$route.query.gridId}&index=${index}`
       });
+    },
+    async buy() {
+      const currentHeight = await this.$store.dispatch("grid/fetchLastBlock");
+      const blockStatus =
+        parseInt(currentHeight) <
+        parseInt(this.dappIssueDetail.height) + parseInt(this.maxBlocksGridCreate)
+          ? true
+          : false;
+      const gridStatus = this.dappIssueDetail.items.length < 9 ? true : false;
+      if (!gridStatus && blockStatus) {
+        this.$message.error("请等待下一期");
+        return;
+      }
+      //
+      const ggt = getViewToken(
+        this.dappDetail.owner_min_deposit,
+        this.tokenMap
+      );
+      this.form1.amount = ggt.amount;
+      if (
+        this.GARDBalance.amount <
+        parseInt(
+          getViewToken(this.dappFees.create_grid_fee, this.tokenMap).amount
+        ) +
+          1
+      ) {
+        this.$message.error("应用费不足");
+        return;
+      }
+      // use math wallet
+      if (!isEmpty(this.mathAccount)) {
+        this.buyGrid(true);
+        return;
+      }
+      // else use local wallet
+      this.form1.pass = "";
+      this.dialogVisible2 = true;
+    },
+    buyGridValidate: throttle(
+      function (formName) {
+        this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!isEmpty(this.mathAccount)) {
+            this.buyGrid(true);
+          } else {
+            this.buyGrid(false)
+          }
+        }
+      });
+      },1500,
+      { trailing: false }
+    ),
+    async buyGrid (useMathWallet) {
+      if (!useMathWallet && !this.form1.pass) {
+        this.$message({
+          type: "error",
+          message: this.$t("global.required", {
+            name: this.$t("create.pass")
+          }),
+          center: true
+        });
+        return false;
+      }
+      const loading = this.$loading({
+        lock: true,
+        text: "Loading",
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.7)"
+      });
+      const params = {
+        dappId: this.$route.query.dappId,
+        denom: "uggt",
+        amount: BigNumber(this.form1.amount)
+          .times(BigNumber(10).pow(6))
+          .toFixed(),
+        pass: this.form1.pass
+      };
+      let res = "";
+      try {
+        res = await this.$store.dispatch("grid/createGrid", params);
+      } catch (e) {
+        this.$message({
+          type: "error",
+          message: this.$t(`send.error`),
+          center: true
+        });
+      }
+      if (res.txhash) {
+        const txStatus = await handleTxReturn(res);
+        if (txStatus) {
+          const raw_log = get(
+            JSON.parse(res.raw_log)[0],
+            "events",
+            []
+          ).filter(item => item.type === "grid_create");
+          const dapp =
+            findLast(get(raw_log[0], "attributes"), {
+              key: "dapp_id"
+            }) || {};
+          const grid =
+            findLast(get(raw_log[0], "attributes"), {
+              key: "grid_id"
+            }) || {};
+          this.$message({
+            type: "success",
+            message: `恭喜你成功抢占第${grid.value}期的一个格子`,
+            center: true,
+            duration: 1000,
+            onClose: () => {
+              window.location.reload();
+            }
+          });
+        } else {
+
+        }
+        this.dialogVisible2 = false;
+      } else {
+        this.$message({
+          type: "error",
+          message: this.$t(`send.${res}`),
+          center: true,
+          onClose:()=> {
+            this.getData()
+          }
+        });
+      }
+      loading.close();
     },
     async deposit(index) {
       const currentBlock = await this.$store.dispatch("grid/fetchLastBlock");
@@ -383,82 +587,163 @@ export default {
         this.$message.error("应用费不足");
         return;
       }
-      // use math wallet
-      if (!isEmpty(this.mathAccount)) {
-        this.onSend(true);
-        return;
-      }
-      // else use local wallet
       this.form.pass = "";
       this.form.amount = "";
       this.dialogVisible1 = true;
     },
-    onSend: throttle(
-      async function(useMathWallet) {
-        if (!useMathWallet && !this.form.pass) {
-          this.$message({
-            type: "error",
-            message: this.$t("global.required", {
-              name: this.$t("create.pass")
-            }),
-            center: true
-          });
-          return false;
-        }
-        const loading = this.$loading({
-          lock: true,
-          text: "Loading",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.7)"
-        });
-        const params = {
-          dappId: this.$route.query.dappId,
-          denom: "uggt",
-          amount: BigNumber(this.form.amount)
-            .times(BigNumber(10).pow(6))
-            .toFixed(),
-          pass: this.form.pass,
-          gridId: this.$route.query.gridId,
-          index: this.index
-        };
-        let res = "";
-        try {
-          res = await this.$store.dispatch("grid/dappDeposit", params);
-        } catch (e) {
-          this.$message({
-            type: "error",
-            message: this.$t(`send.error`),
-            center: true
-          });
-        }
-        if (res.txhash) {
-          const txStatus = await handleTxReturn(res);
-          if (txStatus) {
-            this.$message({
-              type: "success",
-              message: `质押成功！`,
-              center: true,
-              duration: 1000,
-              onClose: () => {
-                this.dialogVisible1 = false;
-                this.getData();
-              }
-            });
-          } else {
+    onSendValidate: throttle(
+      function (formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            if (!isEmpty(this.mathAccount)) {
+              this.onSend(true);
+            } else {
+              this.onSend(false)
+            }
           }
-          this.dialogVisible1 = false;
-        } else {
-          this.$message({
-            type: "error",
-            message: this.$t(`send.${res}`),
-            center: true
-          });
-        }
-        loading.close();
+        });
       },
       1500,
       { trailing: false }
     ),
+    async onSend (useMathWallet) {
+      if (!useMathWallet && !this.form.pass) {
+        this.$message({
+          type: "error",
+          message: this.$t("global.required", {
+            name: this.$t("create.pass")
+          }),
+          center: true
+        });
+        return false;
+      }
+      const loading = this.$loading({
+        lock: true,
+        text: "Loading",
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.7)"
+      });
+      const params = {
+        dappId: this.$route.query.dappId,
+        denom: "uggt",
+        amount: BigNumber(this.form.amount)
+          .times(BigNumber(10).pow(6))
+          .toFixed(),
+        pass: this.form.pass,
+        gridId: this.$route.query.gridId,
+        index: this.index
+      };
+      let res = "";
+      try {
+        res = await this.$store.dispatch("grid/dappDeposit", params);
+      } catch (e) {
+        this.$message({
+          type: "error",
+          message: this.$t(`send.error`),
+          center: true
+        });
+      }
+      if (res.txhash) {
+        const txStatus = await handleTxReturn(res);
+        if (txStatus) {
+          this.$message({
+            type: "success",
+            message: `开采成功！`,
+            center: true,
+            duration: 1000,
+            onClose: () => {
+              this.dialogVisible1 = false;
+              this.getData();
+            }
+          });
+        } else {
+        }
+        this.dialogVisible1 = false;
+      } else {
+        this.$message({
+          type: "error",
+          message: this.$t(`send.${res}`),
+          center: true
+        });
+      }
+      loading.close();
+    },
+    // 判断收获操作
+    async judgeWithdraw() {
+      const depositStatus = await this.judgeDeposits(this.dappIssueDetail)
+      const acceptStatus = await this.judgeAccept(this.dappIssueDetail)
+      // 有开采，没收获过
+      if (depositStatus && !acceptStatus) {
+        this.widthdraw()
+        return
+      }
+      // 有开采，收获过
+      if (depositStatus && acceptStatus) {
+        this.$message.error("您已经收获过本座矿山的收益！")
+        return
+      }
+      const ownerGrid = this.dappIssueDetail.items.filter(i=> {
+        return i.owner == this.keyStore.address
+      })
+      // 是矿主
+      if (ownerGrid.length > 0) {
+        // 没开采，收获过
+        if (!depositStatus && acceptStatus) {
+          this.$message.error("您已经收获过本座矿山的收益！")
+          return
+        }
+        // 没开采，没收获过
+        if (!depositStatus && !acceptStatus) {
+          this.widthdraw()
+          return
+        }
+      }
+      // 不是矿主
+      else {
+        // 没开采
+        if (!depositStatus) {
+          this.$message.error("您未参与本座矿山的矿池抢占或投资！")
+          return
+        }
+      }
+    },
+    // 判断有无存款
+    async judgeDeposits(issueDetail) {
+      let deposits = []
+      issueDetail.items.forEach(i=> {
+        if (!isEmpty(i.deposits)) {
+          deposits.push(...i.deposits)
+        }
+      })
+      if (isEmpty(deposits)) {
+        return Promise.resolve(false)
+      }
+      const myDeposits = find(deposits, i=> {
+        return i.split("_")[0] == this.keyStore.address
+      })
+      if (!isEmpty(myDeposits)) {
+        return Promise.resolve(true)
+      } else {
+        return Promise.resolve(false)
+      }
+    },
+    // 判断有无收获过
+    async judgeAccept(issueDetail) {
+      const backs = !isEmpty(issueDetail.backs) ? issueDetail.backs : []
+      const deposits = !isEmpty(issueDetail.deposits) ? issueDetail.deposits : []
+      const fees = !isEmpty(issueDetail.fees) ? issueDetail.fees : []
+      const rewards = !isEmpty(issueDetail.rewards) ? issueDetail.rewards : []
+      const lucky = !isEmpty(issueDetail.lucky) ? issueDetail.lucky : []
+      let result = [...backs,...deposits,...rewards,...lucky,...fees]
+      const myReward = find(result, i=> {
+        return i.split("_")[0] == this.keyStore.address
+      })
+      if (!isEmpty(myReward)) {
+        return Promise.resolve(true)
+      } else {
+        return Promise.resolve(false)
+      }
+    },
     widthdraw() {
       if (
         this.GARDBalance.amount <
@@ -610,7 +895,9 @@ export default {
     }
     .disabled {
       padding: 10px;
-      filter: grayscale(1);
+      img {
+        filter: grayscale(1);
+      }
     }
     .disabled-no {
       padding: 10px;
@@ -618,7 +905,8 @@ export default {
         transition: 0.2s ease-out;
         box-shadow: 0px 0px 10px 0.1px rosybrown;
       }
-      .action {
+    }
+    .action {
         .btn {
           border: 1px solid #e6e6e6;
           &:hover {
@@ -628,7 +916,6 @@ export default {
           }
         }
       }
-    }
     p {
       text-align: left;
     }
@@ -669,17 +956,14 @@ export default {
   }
 }
 .bottom-btn-div {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  margin-top: 20px;
+  margin-bottom: 20px;
   .withdraw {
     height: 48px;
     font-size: 16px;
     color: #406096;
     background: #fff;
     box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.1);
-    width: 200px;
+    width: 160px;
     border: none;
     &:hover {
       color: #fff;
@@ -701,5 +985,22 @@ export default {
   .page-container {
     padding: 16px;
   }
+  .content {
+  min-height: 50px;
+  background: #fff;
+  padding: 20px;
+  > .demo-item {
+    width: 90%;
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    margin-left: 5%;
+    vertical-align: middle;
+    &:nth-child(3n-1) {
+      margin: 0 0 10px 5%;
+    }
+  }
+}
 }
 </style>

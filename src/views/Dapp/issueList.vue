@@ -3,7 +3,7 @@
     <div v-if="!isEmpty(dappIssueList)">
       <div class="table-header table-header-nav">
         <div class="header-id">矿山 ID</div>
-        <div class="header-denom">开始高度</div>
+        <div class="header-denom" v-if="pageWidth > 768">开始高度</div>
         <div class="header-amount">状态</div>
         <div class="header-action"></div>
       </div>
@@ -12,7 +12,7 @@
         class="table-header table-header-hover"
       >
         <div class="header-id">{{parseInt(dappIssueList[0].id) + 1}}</div>
-        <div class="header-denom">-</div>
+        <div class="header-denom" v-if="pageWidth > 768">-</div>
         <div class="header-amount">
           <span class="green">抢占期</span>
         </div>
@@ -29,7 +29,7 @@
         :key="index"
       >
         <div class="header-id">{{item.id}}</div>
-        <div class="header-denom">{{item.height}}</div>
+        <div class="header-denom" v-if="pageWidth > 768">{{item.height}}</div>
         <div
           class="header-amount"
           v-if="lastBlock"
@@ -49,10 +49,15 @@
             v-if="status(item.height) == '抢占期'"
             @click="buy(item.height)"
           >抢占</p>
-          <p
+          <!-- <p
             class="action-span"
             v-if="status(item.height) == '收获期'"
             @click="widthdraw(item.id)"
+          >收获</p> -->
+          <p
+            class="action-span"
+            v-if="status(item.height) == '收获期'"
+            @click="judgeWithdraw(item)"
           >收获</p>
           <p
             class="action-span"
@@ -106,14 +111,15 @@
           <el-input
             :value="form.amount"
             placeholder="Amount"
+            @keyup.enter.native="onSendValidate('form')"
           ></el-input>
         </el-form-item>
-        <el-form-item>
+        <el-form-item v-if="isEmpty(this.mathAccount)">
           <el-input
             type="password"
             v-model="form.pass"
             :placeholder="$t('create.pass')"
-            @keyup.enter.native="onSend(false)"
+            @keyup.enter.native="onSendValidate('form')"
           ></el-input>
           <!-- <p>应用费: {{getViewToken(dappFees.create_grid_fee,tokenMap).amount}}GARD</p> -->
           <p>gas费: 1GARD</p>
@@ -125,7 +131,7 @@
         class="dialog-footer"
       >
         <el-button
-          @click="onSend(false)"
+          @click="onSendValidate('form')"
           class="ok-btn"
         >{{$t('global.ok')}}</el-button>
       </span>
@@ -161,7 +167,7 @@
 import { mapState } from "vuex";
 import { getViewToken, handleTxReturn } from "@/utils/helpers";
 import BigNumber from "bignumber.js";
-import { get, isEmpty, throttle, findLast } from "lodash";
+import { get, isEmpty, throttle, findLast,find } from "lodash";
 export default {
   data() {
     const validateAmount = (rule, value, callback) => {
@@ -190,7 +196,7 @@ export default {
     };
   },
   computed: {
-    ...mapState("account", ["tokenMap", "balance", "mathAccount"]),
+    ...mapState("account", ["tokenMap", "balance", "mathAccount","keyStore"]),
     ...mapState("grid", [
       "dappIssueList",
       "dappDetail",
@@ -269,24 +275,27 @@ export default {
       };
     }
   },
-  async mounted() {
-    await this.$store.dispatch("grid/fetchDappIssueListAll", {
-      dappId: this.$route.query.dappId
-    });
-    this.$store.dispatch("grid/fetchDappIssueList", {
-      dappId: this.$route.query.dappId,
-      startId: 0
-    });
-    this.$store.dispatch("grid/fetchLastBlock");
-    this.$store.dispatch("grid/fetchDappDetail", {
-      dappId: this.$route.query.dappId
-    });
-    this.$store.dispatch("account/fetchBalance");
-    this.$store.dispatch("grid/fetchDappFees");
+  mounted() {
+    this.getData()
   },
   methods: {
     isEmpty,
     getViewToken,
+    async getData() {
+      await this.$store.dispatch("grid/fetchDappIssueListAll", {
+        dappId: this.$route.query.dappId
+      });
+      this.$store.dispatch("grid/fetchDappIssueList", {
+        dappId: this.$route.query.dappId,
+        startId: 0
+      });
+      this.$store.dispatch("grid/fetchLastBlock");
+      this.$store.dispatch("grid/fetchDappDetail", {
+        dappId: this.$route.query.dappId
+      });
+      this.$store.dispatch("account/fetchBalance");
+      this.$store.dispatch("grid/fetchDappFees");
+    },
     goIssue(id) {
       this.$router.push({
         path: `/dapp/issueDetail?dappId=${this.$route.query.dappId}&gridId=${id}`
@@ -337,19 +346,12 @@ export default {
         this.$message.error("应用费不足");
         return;
       }
-      // use math wallet
-      if (!isEmpty(this.mathAccount)) {
-        this.onSend(true);
-        return;
-      }
-      // else use local wallet
       this.form.pass = "";
       this.dialogVisible1 = true;
     },
     async buy(startHeight) {
       if (this.dappIssueList.length != 0) {
         const currentHeight = await this.$store.dispatch("grid/fetchLastBlock");
-        console.log(currentHeight);
         const blockStatus =
           parseInt(currentHeight) <
           parseInt(startHeight) + parseInt(this.maxBlocksGridCreate)
@@ -379,97 +381,178 @@ export default {
         this.$message.error("应用费不足");
         return;
       }
-      // use math wallet
-      if (!isEmpty(this.mathAccount)) {
-        this.onSend(true);
-        return;
-      }
-      // else use local wallet
       this.form.pass = "";
       this.dialogVisible1 = true;
     },
-    onSend: throttle(
-      async function(useMathWallet) {
-        if (!useMathWallet && !this.form.pass) {
-          this.$message({
-            type: "error",
-            message: this.$t("global.required", {
-              name: this.$t("create.pass")
-            }),
-            center: true
-          });
-          return false;
-        }
-        const loading = this.$loading({
-          lock: true,
-          text: "Loading",
-          spinner: "el-icon-loading",
-          background: "rgba(0, 0, 0, 0.7)"
-        });
-        const params = {
-          dappId: this.$route.query.dappId,
-          denom: "uggt",
-          amount: BigNumber(this.form.amount)
-            .times(BigNumber(10).pow(6))
-            .toFixed(),
-          pass: this.form.pass
-        };
-        let res = "";
-        try {
-          res = await this.$store.dispatch("grid/createGrid", params);
-        } catch (e) {
-          this.$message({
-            type: "error",
-            message: this.$t(`send.error`),
-            center: true
-          });
-        }
-        if (res.txhash) {
-          const txStatus = await handleTxReturn(res);
-          if (txStatus) {
-            const raw_log = get(
-              JSON.parse(res.raw_log)[0],
-              "events",
-              []
-            ).filter(item => item.type === "grid_create");
-            const dapp =
-              findLast(get(raw_log[0], "attributes"), {
-                key: "dapp_id"
-              }) || {};
-            const grid =
-              findLast(get(raw_log[0], "attributes"), {
-                key: "grid_id"
-              }) || {};
-            this.$message({
-              type: "success",
-              message: `恭喜你成功抢占第${grid.value}期的一个格子`,
-              center: true,
-              duration: 1000,
-              onClose: () => {
-                this.$router.push({
-                  path: `/dapp/issueDetail?dappId=${this.$route.query.dappId}&gridId=${grid.value}`
-                });
-              }
-            });
+    onSendValidate: throttle(
+     function (formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!isEmpty(this.mathAccount)) {
+            this.onSend(true);
           } else {
-            window.location.reload();
+            this.onSend(false)
           }
-          this.dialogVisible1 = false;
-        } else {
-          this.$message({
-            type: "error",
-            message: this.$t(`send.${res}`),
-            center: true,
-            onClose:()=> {
-
-            }
-          });
         }
-        loading.close();
-      },
+      });
+    },
       1500,
       { trailing: false }
     ),
+    async onSend(useMathWallet) {
+      if (!useMathWallet && !this.form.pass) {
+        this.$message({
+          type: "error",
+          message: this.$t("global.required", {
+            name: this.$t("create.pass")
+          }),
+          center: true
+        });
+        return false;
+      }
+      const loading = this.$loading({
+        lock: true,
+        text: "Loading",
+        spinner: "el-icon-loading",
+        background: "rgba(0, 0, 0, 0.7)"
+      });
+      const params = {
+        dappId: this.$route.query.dappId,
+        denom: "uggt",
+        amount: BigNumber(this.form.amount)
+          .times(BigNumber(10).pow(6))
+          .toFixed(),
+        pass: this.form.pass
+      };
+      let res = "";
+      try {
+        res = await this.$store.dispatch("grid/createGrid", params);
+      } catch (e) {
+        this.$message({
+          type: "error",
+          message: this.$t(`send.error`),
+          center: true
+        });
+      }
+      if (res.txhash) {
+        const txStatus = await handleTxReturn(res);
+        if (txStatus) {
+          const raw_log = get(
+            JSON.parse(res.raw_log)[0],
+            "events",
+            []
+          ).filter(item => item.type === "grid_create");
+          const dapp =
+            findLast(get(raw_log[0], "attributes"), {
+              key: "dapp_id"
+            }) || {};
+          const grid =
+            findLast(get(raw_log[0], "attributes"), {
+              key: "grid_id"
+            }) || {};
+          this.$message({
+            type: "success",
+            message: `恭喜你成功抢占第${grid.value}期的一个格子`,
+            center: true,
+            duration: 1000,
+            onClose: () => {
+              this.$router.push({
+                path: `/dapp/issueDetail?dappId=${this.$route.query.dappId}&gridId=${grid.value}`
+              });
+            }
+          });
+        } else {
+
+        }
+        this.dialogVisible1 = false;
+      } else {
+        this.$message({
+          type: "error",
+          message: this.$t(`send.${res}`),
+          center: true,
+          onClose:()=> {
+            this.getData()
+          }
+        });
+      }
+      loading.close();
+    },
+    // 判断收获操作
+    async judgeWithdraw(issueDetail) {
+      const depositStatus = await this.judgeDeposits(issueDetail)
+      const acceptStatus = await this.judgeAccept(issueDetail)
+      // 有开采，没收获过
+      if (depositStatus && !acceptStatus) {
+        this.widthdraw(issueDetail.id)
+        return
+      }
+      // 有开采，收获过
+      if (depositStatus && acceptStatus) {
+        this.$message.error("您已经收获过本座矿山的收益！")
+        return
+      }
+      const ownerGrid = issueDetail.items.filter(i=> {
+        return i.owner == this.keyStore.address
+      })
+      // 是矿主
+      if (ownerGrid.length > 0) {
+        // 没开采，收获过
+        if (!depositStatus && acceptStatus) {
+          this.$message.error("您已经收获过本座矿山的收益！")
+          return
+        }
+        // 没开采，没收获过
+        if (!depositStatus && !acceptStatus) {
+          this.widthdraw(issueDetail.id)
+          return
+        }
+      }
+      // 不是矿主
+      else {
+        // 没开采
+        if (!depositStatus) {
+          this.$message.error("您未参与本座矿山的矿池抢占或投资！")
+          return
+        }
+      }
+    },
+    // 判断有无存款
+    async judgeDeposits(issueDetail) {
+      let deposits = []
+      issueDetail.items.forEach(i=> {
+        if (!isEmpty(i.deposits)) {
+          deposits.push(...i.deposits)
+        }
+      })
+      if (isEmpty(deposits)) {
+        return Promise.resolve(false)
+      }
+      const myDeposits = find(deposits, i=> {
+        return i.split("_")[0] == this.keyStore.address
+      })
+      if (!isEmpty(myDeposits)) {
+        return Promise.resolve(true)
+      } else {
+        return Promise.resolve(false)
+      }
+    },
+    // 判断有无收获过
+    async judgeAccept(issueDetail) {
+      const backs = !isEmpty(issueDetail.backs) ? issueDetail.backs : []
+      const deposits = !isEmpty(issueDetail.deposits) ? issueDetail.deposits : []
+      const fees = !isEmpty(issueDetail.fees) ? issueDetail.fees : []
+      const rewards = !isEmpty(issueDetail.rewards) ? issueDetail.rewards : []
+      const lucky = !isEmpty(issueDetail.lucky) ? issueDetail.lucky : []
+      let result = [...backs,...deposits,...rewards,...lucky,...fees]
+      const myReward = find(result, i=> {
+        return i.split("_")[0] == this.keyStore.address
+      })
+      if (!isEmpty(myReward)) {
+        return Promise.resolve(true)
+      } else {
+        return Promise.resolve(false)
+      }
+    },
     widthdraw(gridId) {
       this.gridId = gridId;
       if (
@@ -653,6 +736,21 @@ export default {
   span:last-child {
     color: blue;
     cursor: pointer;
+  }
+}
+@include responsive($sm) {
+  .balance-container {
+    .table-header {
+      > .header-id {
+      flex-basis: 25%;
+    }
+    > .header-amount {
+      flex-basis: 20%;
+    }
+    > .header-action {
+      flex-basis: 55%;
+    }
+    }
   }
 }
 </style>

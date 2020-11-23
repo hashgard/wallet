@@ -74,12 +74,12 @@ export default {
           index: 2,
           name: "Lucky",
           key: "lucky"
-        },
-        {
-          index: 3,
-          name: "Fees",
-          key: "fees"
         }
+        // {
+        //   index: 3,
+        //   name: "Fees",
+        //   key: "fees"
+        // }
       ],
       tableData: [],
       currentPage: 1,
