@@ -1,26 +1,46 @@
 <template>
   <div class="balance-container issueList-container">
-    <div v-if="!isEmpty(dappIssueList)">
+    <div>
+      <div class="help">
+        <el-button class="withdraw" @click="goPlayDoc">{{$t("Mine.HowtoPlay")}}</el-button>
+        <el-button class="withdraw" @click="goRewardsDoc">{{$t("Mine.AboutInvestmentRewards")}}</el-button>
+      </div>
       <div class="table-header table-header-nav">
-        <div class="header-id">矿山 ID</div>
-        <div class="header-denom" v-if="pageWidth > 768">开始高度</div>
-        <div class="header-amount">状态</div>
+        <div class="header-id">{{$t("Mine.MineID")}}</div>
+        <div class="header-denom" v-if="pageWidth > 768">{{$t("Mine.StartingHeight")}}</div>
+        <div class="header-amount">{{$t("Mine.Status")}}</div>
         <div class="header-action"></div>
       </div>
       <div
-        v-if="currentPage == 1 && status(dappIssueList[0].height) != '抢占期'"
+        v-if="currentPage == 1 && dappIssueList.length > 0 && status(dappIssueList[0].height) != $t('Mine.OccupationPeriod') "
         class="table-header table-header-hover"
       >
         <div class="header-id">{{parseInt(dappIssueList[0].id) + 1}}</div>
         <div class="header-denom" v-if="pageWidth > 768">-</div>
         <div class="header-amount">
-          <span class="green">抢占期</span>
+          <span class="green">{{$t("Mine.OccupationPeriod")}}</span>
         </div>
         <div class="header-action">
           <p
             class="action-span"
             @click="buyNew"
-          >抢占</p>
+          >{{$t("Mine.Occupy")}}</p>
+        </div>
+      </div>
+      <div
+        v-if="dappIssueList.length == 0"
+        class="table-header table-header-hover"
+      >
+        <div class="header-id">1</div>
+        <div class="header-denom" v-if="pageWidth > 768">-</div>
+        <div class="header-amount">
+          <span class="green">{{$t("Mine.OccupationPeriod")}}</span>
+        </div>
+        <div class="header-action">
+          <p
+            class="action-span"
+            @click="buyNew"
+          >{{$t("Mine.Occupy")}}</p>
         </div>
       </div>
       <div
@@ -34,7 +54,7 @@
           class="header-amount"
           v-if="lastBlock"
         >
-          <span :class="status(item.height) == '抢占期' ? 'green' : (status(item.height) == '收获期' ? 'gold' : 'blue')">{{status(item.height)}}</span>
+          <span :class="status(item.height) == $t('Mine.OccupationPeriod') ? 'green' : (status(item.height) == $t('Mine.HarvestPeriod') ? 'gold' : 'blue')">{{status(item.height)}}</span>
         </div>
         <div
           class="header-action"
@@ -43,38 +63,34 @@
           <p
             class="action-span"
             @click="goIssue(item.id)"
-          >进入</p>
+          >{{$t("Mine.Enter")}}</p>
           <p
             class="action-span"
-            v-if="status(item.height) == '抢占期'"
+            v-if="status(item.height) == $t('Mine.OccupationPeriod')"
             @click="buy(item.height)"
-          >抢占</p>
-          <!-- <p
-            class="action-span"
-            v-if="status(item.height) == '收获期'"
-            @click="widthdraw(item.id)"
-          >收获</p> -->
+          >{{$t("Mine.Occupy")}}</p>
           <p
             class="action-span"
-            v-if="status(item.height) == '收获期'"
+            v-if="status(item.height) == $t('Mine.HarvestPeriod')"
             @click="judgeWithdraw(item)"
-          >收获</p>
+          >{{$t("Mine.Harvest")}}</p>
           <p
             class="action-span"
-            v-if="status(item.height) == '收获期'"
+            v-if="status(item.height) == $t('Mine.HarvestPeriod')"
             @click="goReward(item.id)"
-          >收获历史</p>
+          >{{$t("Mine.Harvesthistory")}}</p>
         </div>
       </div>
-      <div
+      <!-- <div
         class="table-header"
         v-if="dappIssueList.length == 0"
-      >{{$t("global.null2")}}</div>
+      >{{$t("Mine.None")}}</div> -->
       <div class="page-div">
+        <span>{{$t("Mine.tableTotal", {name:dappIssueList.length == 0 ? 1 : dappIssueAccount})}}</span>
         <el-pagination
           background
           :pager-count="5"
-          layout="total,prev, pager, next"
+          layout="prev, pager, next"
           :current-page="currentPage"
           :page-size="pageSize"
           :total="dappIssueAccount"
@@ -93,7 +109,7 @@
     </div> -->
     <!-- buy -->
     <el-dialog
-      title="抢占矿池"
+      :title="$t('Mine.Occupytheminingpool')"
       :visible.sync="dialogVisible1"
       width="360px"
       :close-on-click-modal="false"
@@ -105,7 +121,7 @@
       >
         <el-form-item prop="amount">
           <p class="input-info">
-            <span>Balance: {{GGTBalance.amount | formatNumber}}GGT</span>
+            <span>{{$t("Mine.Balance")}}: {{GGTBalance.amount | formatNumber}}GGT</span>
             <!-- <span @click="delegateAll">All</span> -->
           </p>
           <el-input
@@ -122,7 +138,7 @@
             @keyup.enter.native="onSendValidate('form')"
           ></el-input>
           <!-- <p>应用费: {{getViewToken(dappFees.create_grid_fee,tokenMap).amount}}GARD</p> -->
-          <p>gas费: 1GARD</p>
+          <p>gas: 1GARD</p>
         </el-form-item>
       </el-form>
 
@@ -137,7 +153,7 @@
       </span>
     </el-dialog>
     <el-dialog
-      title="收获"
+      :title="$t('Mine.Harvest')"
       :visible.sync="dialogVisible"
       width="360px"
       :close-on-click-modal="false"
@@ -149,7 +165,7 @@
         @keyup.enter.native="onWithdraw(false)"
       ></el-input>
       <!-- <p>应用费: {{getViewToken(dappFees.withdraw_rewards_fee, tokenMap).amount}}GARD</p> -->
-      <p>gas费: 1GARD</p>
+      <p style="margin-top:10px;">gas: 1GARD</p>
       <span
         slot="footer"
         class="dialog-footer"
@@ -244,7 +260,8 @@ export default {
       });
     },
     GGTBalance() {
-      const ggt = { amount: "0", denom: "uggt", label: "GGT" };
+
+const ggt = { amount: "0", denom: "uggt", label: "GGT" };
       return this.viewBalance.find(i => i.denom === "uggt") || ggt;
     },
     GARDBalance() {
@@ -266,11 +283,11 @@ export default {
           parseInt(this.maxBlocksGridCreate) + parseInt(startHeight);
         const deposit_end = parseInt(this.maxBlocksGridDeposit) + creat_end;
         if (parseInt(this.lastBlock) >= deposit_end) {
-          return "收获期";
+          return this.$t("Mine.HarvestPeriod");
         } else if (parseInt(this.lastBlock) <= creat_end) {
-          return "抢占期";
+          return this.$t("Mine.OccupationPeriod");
         } else {
-          return "开采期";
+          return this.$t("Mine.MiningPeriod");
         }
       };
     }
@@ -281,6 +298,21 @@ export default {
   methods: {
     isEmpty,
     getViewToken,
+    goPlayDoc() {
+      if (this.$i18n.locale == "zh") {
+        window.open("https://wallet.hashgard.com/%E7%A5%9E%E7%A7%98%E7%9F%BF%E5%B1%B1%E7%8E%A9%E6%B3%95%E8%AF%B4%E6%98%8E.pdf")
+      } else {
+        window.open("https://wallet.hashgard.com/About%20Gold%20Rush%20Age.pdf")
+      }
+
+},
+    goRewardsDoc(){
+      if (this.$i18n.locale == "zh") {
+        window.open("https://wallet.hashgard.com/GGT%E6%94%B6%E7%9B%8A%E8%AF%B4%E6%98%8E.pdf")
+      } else {
+        window.open("https://wallet.hashgard.com/About%20Gold%20Rush%20Age%20Rewards.pdf")
+      }
+    },
     async getData() {
       await this.$store.dispatch("grid/fetchDappIssueListAll", {
         dappId: this.$route.query.dappId
@@ -343,7 +375,7 @@ export default {
         ) +
           1
       ) {
-        this.$message.error("应用费不足");
+        this.$message.error(this.$t("Mine.feeNo"));
         return;
       }
       this.form.pass = "";
@@ -360,7 +392,7 @@ export default {
         const gridStatus =
           this.dappIssueList[0].items.length < 9 ? true : false;
         if (!gridStatus && blockStatus) {
-          this.$message.error("请等待下一期");
+          this.$message.error(this.$t("Mine.wait"));
           return;
         }
         //
@@ -378,7 +410,7 @@ export default {
         ) +
           1
       ) {
-        this.$message.error("应用费不足");
+        this.$message.error(this.$t("Mine.feeNo"));
         return;
       }
       this.form.pass = "";
@@ -452,7 +484,7 @@ export default {
             }) || {};
           this.$message({
             type: "success",
-            message: `恭喜你成功抢占第${grid.value}期的一个格子`,
+            message:this.$t("Mine.SuccessfullyOccupied",{name:grid.value}),
             center: true,
             duration: 1000,
             onClose: () => {
@@ -488,7 +520,7 @@ export default {
       }
       // 有开采，收获过
       if (depositStatus && acceptStatus) {
-        this.$message.error("您已经收获过本座矿山的收益！")
+        this.$message.error(this.$t("Mine.haveClaimed"))
         return
       }
       const ownerGrid = issueDetail.items.filter(i=> {
@@ -498,7 +530,7 @@ export default {
       if (ownerGrid.length > 0) {
         // 没开采，收获过
         if (!depositStatus && acceptStatus) {
-          this.$message.error("您已经收获过本座矿山的收益！")
+          this.$message.error(this.$t("Mine.haveClaimed"))
           return
         }
         // 没开采，没收获过
@@ -511,7 +543,7 @@ export default {
       else {
         // 没开采
         if (!depositStatus) {
-          this.$message.error("您未参与本座矿山的矿池抢占或投资！")
+          this.$message.error(this.$t("Mine.notParticipated"))
           return
         }
       }
@@ -562,7 +594,7 @@ export default {
         ) +
           1
       ) {
-        this.$message.error("应用费不足");
+        this.$message.error(this.$t("Mine.feeNo"));
         return;
       }
       // use math wallet
@@ -612,7 +644,7 @@ export default {
           if (txStatus) {
             this.$message({
               type: "success",
-              message: `操作成功！`,
+              message: this.$t("Mine.Harvest"),
               center: true,
               duration: 1000,
               onClose: () => {
@@ -694,7 +726,6 @@ export default {
       .action-span {
         font-size: 14px;
         color: $main-btn;
-        width: 50px;
         text-align: center;
         cursor: pointer;
         font-weight: bolder;
@@ -718,7 +749,9 @@ export default {
   height: 48px;
 }
 .page-div {
-  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 .gold {
   color: #ff8c00;
@@ -736,6 +769,22 @@ export default {
   span:last-child {
     color: blue;
     cursor: pointer;
+  }
+}
+.help {
+  margin-bottom: 15px;
+  .withdraw {
+    height: 48px;
+    font-size: 16px;
+    color: #406096;
+    background: #fff;
+    box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.1);
+    border: none;
+    &:hover {
+      color: #fff;
+      background: linear-gradient(90deg, #38b5c2 0%, #406096 100%);
+      box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.1);
+    }
   }
 }
 @include responsive($sm) {

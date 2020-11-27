@@ -109,7 +109,7 @@ export default {
       if (isEmpty(indexInfo[0].deposits)) {
         context.commit("setGridDepositsListAll", [])
       } else {
-        context.commit("setGridDepositsListAll", indexInfo[0].deposits)
+        context.commit("setGridDepositsListAll", indexInfo[0].deposits.reverse())
       }
     },
     //分页获取当前格子deposits，每次取10条

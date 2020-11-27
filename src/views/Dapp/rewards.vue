@@ -30,16 +30,17 @@
       <div
         class="table-header"
         v-if="tableData.length == 0"
-      >{{$t("global.null2")}}</div>
+      >{{$t("Mine.None")}}</div>
     </div>
     <div class="page-div">
+      <span>{{$t("Mine.tableTotal", {name:total})}}</span>
       <el-pagination
         background
         :pager-count="5"
-        layout="total,prev, pager, next"
-        :current-page="currentPage"
+        layout="prev, pager, next"
+        :current-page.sync="currentPage"
         :page-size="pageSize"
-        :total="tableData.length"
+        :total="total"
         @prev-click="onPageChange"
         @next-click="onPageChange"
         @current-change="onPageChange"
@@ -84,7 +85,8 @@ export default {
       tableData: [],
       currentPage: 1,
       pageSize: 10,
-      typeName: "deposits"
+      typeName: "deposits",
+      total:0
     };
   },
   computed: {
@@ -126,10 +128,12 @@ export default {
       this.typeName = name;
       if (isEmpty(this.dappIssueDetail[name])) {
         this.tableData = [];
+        this.total = 0
       } else {
         this.tableData = this.handleInfo(
           this.dappIssueDetail[name].slice(0, this.pageSize)
         );
+        this.total = this.dappIssueDetail[name].length
       }
     },
     onPageChange(page) {
@@ -149,8 +153,10 @@ export default {
         this.tableData = this.handleInfo(
           this.dappIssueDetail.deposits.slice(0, this.pageSize)
         );
+        this.total = this.dappIssueDetail.deposits.length
       } else {
         this.tableData = [];
+        this.total = 0
       }
     }
   },
@@ -235,7 +241,9 @@ export default {
   text-align: center;
 }
 .page-div {
-  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 @include responsive($sm) {
   .page-container {

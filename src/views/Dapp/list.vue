@@ -18,10 +18,11 @@
             @click="enterDapp(i.id)"
           >
             <img
-              :src="i.icon"
+              src="https://wallet.hashgard.com/WechatIMG777.png"
               alt=""
             >
-            <p>{{(i.name)}}</p>
+            <p v-if="i.name== 'Mysterious MIne'">{{$t('Mine.MysteriousMIne')}}</p>
+            <p v-else>{{(i.name)}}</p>
           </div>
         </div>
       </s-card>
@@ -30,11 +31,13 @@
 </template>
 <script>
 import { mapState } from "vuex";
-import minePng from "@/assets/mine.png";
+import minePng from "@/assets/WechatIMG777.png";
 export default {
   name: "DappList",
   data() {
-    return {};
+    return {
+      minePng
+    };
   },
   computed: {
     ...mapState("grid", ["dappList"])
@@ -89,24 +92,19 @@ export default {
   }
   .demos {
     > .demo-item {
-      width: 30%;
+      width: 42.5%;
       text-align: center;
       display: inline-block;
       cursor: pointer;
-      padding: 10px;
+      padding: 30px 0;
       border-radius: 6px;
       background: antiquewhite;
       margin-bottom: 10px;
+      margin-left: 5%;
       vertical-align: middle;
       &:hover {
         transition: 0.2s ease-out;
         box-shadow: 0px 0px 10px 0.1px rosybrown;
-      }
-      &:nth-child(3n-1) {
-        margin: 0 5% 10px;
-      }
-      > p {
-        height: 30px;
       }
       > img {
         width: 80px;

@@ -16,7 +16,7 @@
         style="z-index:999 !important"
         round
         @click="goDappList"
-      >应用市场</el-button>
+      >{{$t("Mine.dapp")}}</el-button>
     </div>
     <div class="home-items">
       <div class="items">

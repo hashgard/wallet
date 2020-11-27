@@ -45,7 +45,8 @@ Vue.config.productionTip = false;
 Vue.prototype.$echarts = echarts
 
 Vue.use(VueI18n);
-const lang = localStorage.getItem('lang') || window.navigator.language || window.navigator.userLanguage;
+// const lang = localStorage.getItem('lang') || window.navigator.language || window.navigator.userLanguage;
+const lang = localStorage.getItem('lang') || 'en';
 const i18n = new VueI18n({
   locale: lang.match('zh') ? 'zh' : 'en',
   messages: {

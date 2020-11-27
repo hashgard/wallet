@@ -15,31 +15,31 @@
           <div class="top-right-top">
             <div class="top-item">
               <p class="value">{{$route.query.gridId}}</p>
-              <p class="name">矿山ID</p>
+              <p class="name">{{$t("Mine.MineID")}}</p>
             </div>
             <div class="top-item">
               <p class="value">{{$route.query.index}}</p>
-              <p class="name">矿池ID</p>
+              <p class="name">{{$t("Mine.MiningpoolID")}}</p>
             </div>
             <div class="top-item">
               <p class="value">{{totalNumber | formatNumber}}</p>
-              <p class="name">矿池健康值</p>
+              <p class="name">{{$t("Mine.Miningprogress")}}</p>
             </div>
             <div class="top-item">
               <p class="value">{{depositAmount.amount | formatNumber}}</p>
-              <p class="name">入股总额</p>
+              <p class="name">{{$t("Mine.TotalInvestment")}}</p>
             </div>
           </div>
           <div class="top-right-bottom">
             <div class="owner">
-              <p style="margin-right: 3px;">矿主: </p>
+              <p style="margin-right: 3px;">{{$t("Mine.MineOwner")}}: </p>
               <s-address
                 :address="indexOwner"
                 :ellipsis="true"
               />
             </div>
-            <div>占领花费: {{ownerDeposit.amount | formatNumber}}{{ownerDeposit.denom}}</div>
-            <div>矿池初始健康值: <span :class="[ownerNumber > 0 ? 'green' : 'red']">{{ownerNumber | formatNumber}}</span></div>
+            <div>{{$t("Mine.Occupationcost")}}: {{ownerDeposit.amount | formatNumber}}{{ownerDeposit.denom}}</div>
+            <div>{{$t("Mine.Miningpoolinitialvalue")}}: <span :class="[ownerNumber > 0 ? 'green' : 'red']">{{ownerNumber | formatNumber}}</span></div>
           </div>
         </div>
       </div>
@@ -53,11 +53,11 @@
         style="margin-bottom: 10px;"
       >只显示我的Deposit</el-checkbox> -->
       <div class="table-header table-header-nav">
-        <div class="header-operator">股东</div>
-        <div class="header-action">投入资金</div>
-        <div class="header-consume">保险池</div>
-        <div class="header-pool">实际入股</div>
-        <div class="header-value">健康值加成</div>
+        <div class="header-operator">{{$t("Mine.Investors")}}</div>
+        <div class="header-action">{{$t("Mine.Investmentamount")}}</div>
+        <div class="header-consume">{{$t("Mine.ReliefFundspool")}}</div>
+        <div class="header-pool">{{$t("Mine.ActualInvestmentamount")}}</div>
+        <div class="header-value">{{$t("Mine.Valuevariation")}}</div>
       </div>
       <div
         class="table-header table-header-hover"
@@ -80,13 +80,14 @@
       <div
         class="table-header"
         v-if="depositList.length == 0"
-      >{{$t("global.null2")}}</div>
+      >{{$t("Mine.None")}}</div>
     </div>
     <div class="page-div">
+      <span>{{$t("Mine.tableTotal", {name:gridDepositsListAll.length})}}</span>
       <el-pagination
         background
         :pager-count="5"
-        layout="total,prev, pager, next"
+        layout="prev, pager, next"
         :current-page="currentPage"
         :page-size="pageSize"
         :total="gridDepositsListAll.length"
@@ -222,7 +223,7 @@ export default {
       );
     },
     goAddress(address) {
-      window.open(`http://172.16.7.219:8080/#/address/${address}`);
+      window.open(`https://explorer.hashgard.com/#/address/${address}`);
     },
     async getData() {
       await this.$store.dispatch("grid/fetchDappIssueDetail", {
@@ -264,7 +265,6 @@ export default {
   > .top {
     display: flex;
     align-items: center;
-    height: 150px;
     > .top-left {
       width: 25%;
       display: flex;
@@ -368,7 +368,9 @@ export default {
   text-align: center;
 }
 .page-div {
-  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 @include responsive($sm) {
   .page-container {

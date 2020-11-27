@@ -7,11 +7,11 @@
       <el-button
         class="withdraw"
         @click="judgeWithdraw"
-      >一键收获</el-button>
+      >{{$t("Mine.ClicktoHarvest")}}</el-button>
       <el-button
         class="withdraw"
         @click="goReward"
-      >收获历史</el-button>
+      >{{$t("Mine.Harvesthistory")}}</el-button>
     </div>
     <div class="content">
       
@@ -32,18 +32,18 @@
             >
           </div>
 
-          <p class="number">矿池健康值: <br>暂无</p>
+          <p class="number">{{$t("Mine.Miningprogress")}}: <br>{{$t("Mine.None")}}</p>
           <p
             class="owner"
             style="color: gray;"
-          >未被占领</p>
+          >{{$t("Mine.Openforoccupation")}}</p>
           <div class="action">
             <el-button
               class="btn"
               size="small"
-              :disabled="status == '抢占期' ? false : true"
+              :disabled="status == $t('Mine.OccupationPeriod') ? false : true"
               @click="buy"
-            >抢 占</el-button>
+            >{{$t("Mine.Occupy")}}</el-button>
           </div>
         </div>
         <!-- 已抢占 -->
@@ -65,30 +65,30 @@
             >
           </div>
 
-          <p class="number">矿池健康值: <br>{{i.total_number | formatNumber}}</p>
+          <p class="number">{{$t("Mine.Miningprogress")}}: <br>{{i.total_number | formatNumber}}</p>
           <p
             class="owner"
             v-if="keyStore.address == i.owner"
             style="color: blue;"
-          >矿主: {{i.owner | gardAddr}}</p>
+          >{{$t("Mine.MineOwner")}}: {{i.owner | gardAddr}}</p>
           <p
             class="owner"
             v-else
-          >矿主: {{i.owner | gardAddr}}</p>
+          >{{$t("Mine.MineOwner")}}: {{i.owner | gardAddr}}</p>
           <div class="action">
             <el-button
-              :disabled="status == '抢占期' ? true : false"
+              :disabled="status == $t('Mine.OccupationPeriod') ? true : false"
               class="btn"
               size="small"
               @click.stop="deposit(i.index)"
-            >{{ status == '抢占期' ? '待开采' : '开 采'}}</el-button>
+            >{{ status == $t('Mine.OccupationPeriod') ? $t("Mine.Openformining") : $t("Mine.Mine")}}</el-button>
           </div>
         </div>
       </div>
     </div>
 
     <el-dialog
-      title="开采"
+      :title="$t('Mine.Mine')"
       :visible.sync="dialogVisible1"
       width="360px"
       :close-on-click-modal="false"
@@ -100,16 +100,16 @@
       >
         <el-form-item prop="amount">
           <p class="input-info">
-            <span>Balance: {{GGTBalance.amount | formatNumber}}GGT</span>
+            <span>{{$t("Mine.Balance")}}: {{GGTBalance.amount | formatNumber}}GGT</span>
             <!-- <span @click="delegateAll">All</span> -->
           </p>
           <p class="input-info">
-            <span>Area: {{this.minDeposit.amount}}-{{this.maxDeposit.amount}}GGT</span>
+            <span>{{$t("Mine.Investmentquota")}}: {{this.minDeposit.amount}}-{{this.maxDeposit.amount}}GGT</span>
           </p>
           <el-input
           type="number"
             v-model="form.amount"
-            placeholder="Amount"
+            :placeholder="$t('Mine.Investmentamount')"
           ></el-input>
         </el-form-item>
         <el-form-item v-if="isEmpty(this.mathAccount)">
@@ -120,7 +120,7 @@
             @keyup.enter.native="onSendValidate('form')"
           ></el-input>
           <!-- <p>应用费: {{getViewToken(dappFees.deposit_fee, tokenMap).amount}}GARD</p> -->
-          <p>gas费: 1GARD</p>
+          <p>gas: 1GARD</p>
         </el-form-item>
       </el-form>
 
@@ -135,7 +135,7 @@
       </span>
     </el-dialog>
     <el-dialog
-      title="收获"
+      :title="$t('Mine.Harvest')"
       :visible.sync="dialogVisible"
       width="360px"
       :close-on-click-modal="false"
@@ -147,7 +147,7 @@
         @keyup.enter.native="onWithdraw(false)"
       ></el-input>
       <!-- <p>应用费: {{getViewToken(dappFees.withdraw_rewards_fee, tokenMap).amount}}GARD</p> -->
-      <p>gas费: 1GARD</p>
+      <p style="margin-top:10px;">gas: 1GARD</p>
       <span
         slot="footer"
         class="dialog-footer"
@@ -159,7 +159,7 @@
       </span>
     </el-dialog>
     <el-dialog
-      title="抢占矿池"
+      :title="$t('Mine.Occupytheminingpool')"
       :visible.sync="dialogVisible2"
       width="360px"
       :close-on-click-modal="false"
@@ -171,7 +171,7 @@
       >
         <el-form-item prop="amount">
           <p class="input-info">
-            <span>Balance: {{GGTBalance.amount | formatNumber}}GGT</span>
+            <span>{{$t("Mine.Balance")}}: {{GGTBalance.amount | formatNumber}}GGT</span>
             <!-- <span @click="delegateAll">All</span> -->
           </p>
           <el-input
@@ -187,7 +187,7 @@
             @keyup.enter.native="buyGridValidate('form1')"
           ></el-input>
           <!-- <p>应用费: {{getViewToken(dappFees.create_grid_fee,tokenMap).amount}}GARD</p> -->
-          <p>gas费: 1GARD</p>
+          <p>gas: 1GARD</p>
         </el-form-item>
       </el-form>
 
@@ -378,11 +378,11 @@ export default {
         parseInt(this.maxBlocksGridCreate) + parseInt(this.dappIssueDetail.height);
       const deposit_end = parseInt(this.maxBlocksGridDeposit) + creat_end;
       if (parseInt(this.lastBlock) >= deposit_end) {
-        return "收获期";
+        return this.$t("Mine.HarvestPeriod");
       } else if (parseInt(this.lastBlock) <= creat_end) {
-        return "抢占期";
+        return this.$t("Mine.OccupationPeriod");
       } else {
-        return "开采期";
+        return this.$t("Mine.MiningPeriod");
       }
     },
     myDepositJudge() {
@@ -422,7 +422,7 @@ export default {
           : false;
       const gridStatus = this.dappIssueDetail.items.length < 9 ? true : false;
       if (!gridStatus && blockStatus) {
-        this.$message.error("请等待下一期");
+        this.$message.error(this.$t("Mine.wait"));
         return;
       }
       //
@@ -438,7 +438,7 @@ export default {
         ) +
           1
       ) {
-        this.$message.error("应用费不足");
+        this.$message.error(this.$t("Mine.feeNo"));
         return;
       }
       // use math wallet
@@ -517,7 +517,7 @@ export default {
             }) || {};
           this.$message({
             type: "success",
-            message: `恭喜你成功抢占第${grid.value}期的一个格子`,
+            message: this.$t("Mine.SuccessfullyOccupied",{name:grid.value}),
             center: true,
             duration: 1000,
             onClose: () => {
@@ -550,7 +550,7 @@ export default {
           parseInt(this.dappIssueDetail.height) +
             parseInt(this.maxBlocksGridCreate)
         ) {
-          this.$message.error("抢占期未结束不能开采");
+          this.$message.error(this.$t("Mine.Miningisnotallowed"));
           return;
         }
       }
@@ -560,11 +560,11 @@ export default {
           parseInt(this.maxBlocksGridCreate) +
           parseInt(this.maxBlocksGridDeposit)
       ) {
-        this.$message.error("采矿期已过，无法继续开采");
+        this.$message.error(this.$t("Mine.miningperiodover"));
         return;
       }
       if (this.dappIssueDetail.items.length <= 1) {
-        this.$message.error("当前格子数不足，请等待其他人抢占");
+        this.$message.error(this.$t("Mine.lessthan"));
         return;
       }
       const maxNum = parseInt(this.dappDetail.per_grid_max_deposits);
@@ -573,7 +573,7 @@ export default {
       });
       if (!isEmpty(indexInfo[0].deposits)) {
         if (indexInfo[0].deposits.length >= maxNum) {
-          this.$message.error("当前格子存款次数已达上限");
+          this.$message.error(this.$t("Mine.maximumlimit"));
           return;
         }
       }
@@ -584,7 +584,7 @@ export default {
         ) +
           1
       ) {
-        this.$message.error("应用费不足");
+        this.$message.error(this.$t("Mine.feeNo"));
         return;
       }
       this.form.pass = "";
@@ -648,7 +648,7 @@ export default {
         if (txStatus) {
           this.$message({
             type: "success",
-            message: `开采成功！`,
+            message: this.$t("Mine.Keepminingnow"),
             center: true,
             duration: 1000,
             onClose: () => {
@@ -679,7 +679,7 @@ export default {
       }
       // 有开采，收获过
       if (depositStatus && acceptStatus) {
-        this.$message.error("您已经收获过本座矿山的收益！")
+        this.$message.error(this.$t("Mine.haveClaimed"))
         return
       }
       const ownerGrid = this.dappIssueDetail.items.filter(i=> {
@@ -689,7 +689,7 @@ export default {
       if (ownerGrid.length > 0) {
         // 没开采，收获过
         if (!depositStatus && acceptStatus) {
-          this.$message.error("您已经收获过本座矿山的收益！")
+          this.$message.error(this.$t("Mine.haveClaimed"))
           return
         }
         // 没开采，没收获过
@@ -702,7 +702,7 @@ export default {
       else {
         // 没开采
         if (!depositStatus) {
-          this.$message.error("您未参与本座矿山的矿池抢占或投资！")
+          this.$message.error(this.$t("Mine.notParticipated"))
           return
         }
       }
@@ -752,7 +752,7 @@ export default {
         ) +
           1
       ) {
-        this.$message.error("应用费不足");
+        this.$message.error(this.$t("Mine.feeNo"));
         return;
       }
       // use math wallet
@@ -802,7 +802,7 @@ export default {
           if (txStatus) {
             this.$message({
               type: "success",
-              message: `操作成功！`,
+              message: this.$t("global.success", {name:this.$t("Mine.Harvest")}),
               center: true,
               duration: 1000,
               onClose: () => {
