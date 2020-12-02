@@ -11,7 +11,7 @@
         <div class="header-amount">{{$t("Mine.Status")}}</div>
         <div class="header-action"></div>
       </div>
-      <div
+      <!-- <div
         v-if="currentPage == 1 && dappIssueList.length > 0 && status(dappIssueList[0].height) != $t('Mine.OccupationPeriod') "
         class="table-header table-header-hover"
       >
@@ -22,8 +22,13 @@
         </div>
         <div class="header-action">
           <p
+            v-if="disabledCreat && lastBlock != '0'"
             class="action-span"
             @click="buyNew"
+          >{{$t("Mine.Occupy")}}</p>
+          <p
+            v-else
+            class="action-span"
           >{{$t("Mine.Occupy")}}</p>
         </div>
       </div>
@@ -38,15 +43,21 @@
         </div>
         <div class="header-action">
           <p
+            v-if="disabledCreat && lastBlock != '0'"
             class="action-span"
             @click="buyNew"
           >{{$t("Mine.Occupy")}}</p>
+          <p
+            v-else
+            class="action-span"
+          >{{$t("Mine.Occupy")}}</p>
         </div>
-      </div>
-      <div
+      </div> -->
+      <div v-for="(item, index) in dappIssueList"
+        :key="index">
+        <div
         class="table-header table-header-hover"
-        v-for="(item, index) in dappIssueList"
-        :key="index"
+        v-if="item.id < 9"
       >
         <div class="header-id">{{item.id}}</div>
         <div class="header-denom" v-if="pageWidth > 768">{{item.height}}</div>
@@ -66,7 +77,7 @@
           >{{$t("Mine.Enter")}}</p>
           <p
             class="action-span"
-            v-if="status(item.height) == $t('Mine.OccupationPeriod')"
+            v-if="status(item.height) == $t('Mine.OccupationPeriod') && disabledCreat && lastBlock != '0'"
             @click="buy(item.height)"
           >{{$t("Mine.Occupy")}}</p>
           <p
@@ -81,19 +92,22 @@
           >{{$t("Mine.Harvesthistory")}}</p>
         </div>
       </div>
+      </div>
+      
       <!-- <div
         class="table-header"
         v-if="dappIssueList.length == 0"
       >{{$t("Mine.None")}}</div> -->
       <div class="page-div">
-        <span>{{$t("Mine.tableTotal", {name:dappIssueList.length == 0 ? 1 : dappIssueAccount})}}</span>
+        <!-- <span>{{$t("Mine.tableTotal", {name:dappIssueList.length == 0 ? 1 : dappIssueAccount})}}</span> -->
+        <span>{{$t("Mine.tableTotal", {name:8})}}</span>
         <el-pagination
           background
           :pager-count="5"
           layout="prev, pager, next"
           :current-page="currentPage"
           :page-size="pageSize"
-          :total="dappIssueAccount"
+          :total="8"
           @prev-click="onPageChange"
           @next-click="onPageChange"
           @current-change="onPageChange"
@@ -221,6 +235,9 @@ export default {
       "lastBlock",
       "dappIssueListAll"
     ]),
+    disabledCreat(){
+      return parseInt(this.lastBlock) > 2978946 ? false : true
+    },
     viewBalance() {
       if (sessionStorage.getItem("boxAmount")) {
         return [JSON.parse(sessionStorage.getItem("boxAmount"))];

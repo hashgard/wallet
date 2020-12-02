@@ -12,7 +12,7 @@ export default {
     dappDetail: {},
     dappIssueList: [],
     dappIssueDetail: {},
-    lastBlock: '',
+    lastBlock: '0',
     gridDepositsListAll: [],
     dappFees: {},
     dappIssueAccount: 0,

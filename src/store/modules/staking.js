@@ -28,7 +28,8 @@ export default {
     unbindingMap: {},
     addressRedelegations: [],
     distributionMap: {},
-    validatorIssue: {}
+    validatorIssue: {},
+    validatorRewardsAddress:{}
   },
 
   getters: {},
@@ -87,6 +88,9 @@ export default {
     },
     setValidatorIssue(state, data) {
       state.validatorIssue = data
+    },
+    setValidatorRewardsAddress(state, data) {
+      state.validatorRewardsAddress = data
     }
   },
 
@@ -391,6 +395,55 @@ export default {
         })
       })
       context.commit('setAddressRedelegations', result)
+    },
+    async fetchValidatorsDelegations(context) {
+      const nodeArr = [
+        "gardvaloper1yzjvrpj8v24w0yxdx3y0yraj8d7x4w08gtcguj",
+        "gardvaloper1khvm3tm9xtqzt76ayml9ru97grlks5jssdr7fq",
+        "gardvaloper1f200hhsfnm8twa2q2qgjmmgkhql62whjxlv2my",
+        "gardvaloper1d2tkv822plz3734vjwlzzrqvhmr702345tktag",
+        "gardvaloper1cpqdny8x5su64z6v6cflam9z7jt7d6hz2wrhvl",
+        "gardvaloper18xq5f0rj225et2fg4xdtf204fqtygdkefx3f7c",
+      ]
+      let nodeRewardsAddress = {
+        "gardvaloper1yzjvrpj8v24w0yxdx3y0yraj8d7x4w08gtcguj":'',
+        "gardvaloper1khvm3tm9xtqzt76ayml9ru97grlks5jssdr7fq":'',
+        "gardvaloper1f200hhsfnm8twa2q2qgjmmgkhql62whjxlv2my":'',
+        "gardvaloper1d2tkv822plz3734vjwlzzrqvhmr702345tktag":'',
+        "gardvaloper1cpqdny8x5su64z6v6cflam9z7jt7d6hz2wrhvl":'',
+        "gardvaloper18xq5f0rj225et2fg4xdtf204fqtygdkefx3f7c":''
+      }
+      await nodeArr.reduce(async (memo, i, index) => {
+        await memo;
+        const {
+          data
+        } = await ajax.get(`/staking/validators/${i}/delegations`)
+        data.result.sort((a, b) => {
+          return b.balance - a.balance
+        })
+        nodeRewardsAddress[i] = data.result.length ? data.result[0].delegator_address : ''
+      }, undefined)
+      context.commit("setValidatorRewardsAddress", nodeRewardsAddress)
+    },
+    //节点质押第一名领取收益
+    async withdrawValidator(context,params) {
+      const {
+        data
+      } = await ajax.get(`/staking/validator/withdraw_to/reward/${params.validator}/${params.address}`);
+      if (isEmpty(data)) {
+        return Promise.reject();
+      }
+      return Promise.resolve(data)
+    },
+    //节点质押第一名修改节点名称
+    async editNodeName(context,params) {
+      const {
+        data
+      } = await ajax.get(`/staking/validator/withdraw_to/moniker/${params.validator}/${params.address}/${params.name} `);
+      if (isEmpty(data)) {
+        return Promise.reject();
+      }
+      return Promise.resolve(data)
     }
   }
 };

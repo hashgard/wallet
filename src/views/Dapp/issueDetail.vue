@@ -41,7 +41,7 @@
             <el-button
               class="btn"
               size="small"
-              :disabled="status == $t('Mine.OccupationPeriod') ? false : true"
+              :disabled="(status == $t('Mine.OccupationPeriod') && disabledCreat && lastBlock != '0') ? false : true"
               @click="buy"
             >{{$t("Mine.Occupy")}}</el-button>
           </div>
@@ -288,6 +288,9 @@ export default {
       "lastBlock",
       "dappFees"
     ]),
+    disabledCreat(){
+      return parseInt(this.lastBlock) > 2978946 ? false : true
+    },
     mineList() {
       if (!isEmpty(this.dappIssueDetail.items)) {
         let result = [].concat(this.dappIssueDetail.items);
