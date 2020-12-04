@@ -15,8 +15,8 @@ import {
   parameter
 } from './parameter';
 const apiDomain = 'https://node.hashgard.com/';
-let baseURL = `${location.origin}/api`
-// let baseURL = `https://rest.hashgard.com/gard/api`
+// let baseURL = `${location.origin}/api`
+let baseURL = `https://rest.hashgard.com/gard/api`
 const gardplorerDomain = 'https://www.gardplorer.io/';
 // use dev api
 

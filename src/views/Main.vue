@@ -92,12 +92,12 @@
       >
         <MyNode></MyNode>
       </el-tab-pane>
-      <el-tab-pane
+      <!-- <el-tab-pane
         label="社区节点收益"
         name="nodeRewards"
       >
         <NodeRewards></NodeRewards>
-      </el-tab-pane>
+      </el-tab-pane> -->
     </el-tabs>
   </div>
 </template>
@@ -115,7 +115,7 @@ import TransactionList from "@/components/TransactionList";
 import DelegatePage from "@/views/StakingMain";
 import Redelegate from "@/views/Redelegate";
 import MyNode from "@/views/MyNode";
-import NodeRewards from "@/views/NodeRewards.vue";
+// import NodeRewards from "@/views/NodeRewards.vue";
 import VotePage from "@/views/VoteMain.vue";
 // import TxPage from "@/views/Txs.vue";
 import { getViewToken, strToHexCharCode } from "@/utils/helpers";
@@ -131,7 +131,7 @@ export default {
     VotePage,
     Redelegate,
     MyNode,
-    NodeRewards
+    // NodeRewards
   },
   data() {
     return {
