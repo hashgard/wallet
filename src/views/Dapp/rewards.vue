@@ -71,11 +71,11 @@ export default {
           name: "Rewards",
           key: "rewards"
         },
-        {
-          index: 2,
-          name: "Lucky",
-          key: "lucky"
-        }
+        // {
+        //   index: 2,
+        //   name: "Lucky",
+        //   key: "lucky"
+        // }
         // {
         //   index: 3,
         //   name: "Fees",

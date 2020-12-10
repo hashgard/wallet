@@ -6,6 +6,7 @@ import basic from './modules/basic.js';
 import gov from './modules/gov.js';
 import migrate from './modules/migrate.js';
 import grid from './modules/grid.js';
+import lockDapp from './modules/lockDapp.js';
 export default {
   modules: {
     account,
@@ -15,6 +16,7 @@ export default {
     basic,
     gov,
     migrate,
-    grid
+    grid,
+    lockDapp
   }
 };

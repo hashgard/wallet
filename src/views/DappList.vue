@@ -13,16 +13,13 @@
         <div class="demos">
           <div
             class="demo-item"
-            v-for="(i,index) in dappList"
-            :key="index"
-            @click="enterDapp(i.id)"
+            @click="enterDepositDapp"
           >
             <img
-              src="https://wallet.hashgard.com/WechatIMG777.png"
+              :src="housePng"
               alt=""
             >
-            <p v-if="i.name== 'Mysterious MIne'">{{$t('Mine.MysteriousMIne')}}</p>
-            <p v-else>{{(i.name)}}</p>
+            <p>建房子</p>
           </div>
         </div>
       </s-card>
@@ -30,27 +27,24 @@
   </div>
 </template>
 <script>
-import { mapState } from "vuex";
 import minePng from "@/assets/WechatIMG777.png";
+import housePng from "@/assets/181607483315_.pic_hd.jpg";
 export default {
   name: "DappList",
   data() {
     return {
-      minePng
+      minePng,
+      housePng
     };
   },
   computed: {
-    ...mapState("grid", ["dappList"])
   },
   methods: {
-    enterDapp(id) {
+    enterDepositDapp() {
       this.$router.push({
-        path: `/dapp/issueList?dappId=${id}`
-      });
+        path: `/lockDapp/home`
+      })
     }
-  },
-  mounted() {
-    this.$store.dispatch("grid/fetchDappList");
   }
 };
 </script>

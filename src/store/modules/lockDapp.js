@@ -13,13 +13,11 @@ export default {
   state: {
     dappList: [],
     dappDetail: {},
-    dappIssueList: [],
-    dappIssueDetail: {},
+    dappIssueDetail:{},
     lastBlock: '0',
     gridDepositsListAll: [],
     dappFees: {},
-    dappIssueAccount: 0,
-    dappIssueListAll: []
+    dappFirstIssue:{}
   },
   getters: {
 
@@ -30,9 +28,6 @@ export default {
     },
     setDappDetail(state, data) {
       state.dappDetail = data
-    },
-    setDappIssueList(state, data) {
-      state.dappIssueList = data
     },
     setDappIssueDetail(state, data) {
       state.dappIssueDetail = data
@@ -46,11 +41,8 @@ export default {
     setDappFees(state, data) {
       state.dappFees = data
     },
-    setDappIssueAccount(state, data) {
-      state.dappIssueAccount = data
-    },
-    setDappIssueListAll(state, data) {
-      state.dappIssueListAll = data
+    setDappFirstIssue(state, data) {
+      state.dappFirstIssue = Object.assign({}, state.dappFirstIssue, data)
     }
   },
   actions: {
@@ -69,6 +61,16 @@ export default {
       if (!isEmpty(data)) {
         context.commit("setDappList", data.result.reverse());
       }
+      const dappList = data.result;
+      await dappList.reduce(async (memo, i)=> {
+        if (i.id == "1000001") {
+          await memo;
+          const firstIssueDetail = await context.dispatch("fetchDappIssueDetail",{dappId: i.id});
+          context.commit("setDappFirstIssue", {
+            [i.id]:firstIssueDetail
+          })
+        }
+      }, undefined)
       return Promise.resolve(data);
     },
     // 获取dapp详情
@@ -81,35 +83,15 @@ export default {
       }
       return Promise.resolve(data);
     },
-    // 获取dapp所有期数
-    async fetchDappIssueListAll(context, params) {
-      const {
-        data
-      } = await ajax.get(`/grid999/grid/list/${params.dappId}/0/9999`);
-      if (!isEmpty(data)) {
-        context.commit("setDappIssueAccount", data.result ? data.result.length : 0);
-        context.commit("setDappIssueListAll", data.result ? data.result : []);
-      }
-    },
-    // 获取dapp所有期数,分页
-    async fetchDappIssueList(context, params) {
-      const {
-        data
-      } = await ajax.get(`/grid999/grid/list/${params.dappId}/${params.startId}/10`);
-      if (!isEmpty(data)) {
-        context.commit("setDappIssueList", data.result ? data.result : []);
-      }
-      return Promise.resolve(data);
-    },
-    //获取某一期信息
+    // 获取第一期信息
     async fetchDappIssueDetail(context, params) {
       const {
         data
-      } = await ajax.get(`/grid999/grid/detail/${params.dappId}/${params.gridId}`);
+      } = await ajax.get(`/grid999/grid/detail/${params.dappId}/1`);
       if (!isEmpty(data)) {
         context.commit("setDappIssueDetail", data.result);
       }
-      return Promise.resolve(data);
+      return Promise.resolve(data.result);
     },
     //获取当前格子的deposits
     async fetchGridDepositsAll(context, params) {
@@ -138,26 +120,6 @@ export default {
         sessionStorage.setItem("dappFees", JSON.stringify(data.result))
       }
     },
-    //抢占格子
-    async createGrid(context, params) {
-      const address = context.rootGetters['account/currentAddress'];
-      const msg = {
-        type: "cosmos-sdk/MsgDappCreateGrid",
-        sender: address,
-        dapp_id: params.dappId,
-        deposit: {
-          denom: params.denom,
-          amount: params.amount
-        },
-        grid_type: "open",
-        zero_valued: false,
-        prepaid: ""
-      }
-      const {
-        data
-      } = await sendTx(context, params.pass, 'MsgDappCreateGrid', msg);
-      return Promise.resolve(data);
-    },
     //格子质押币
     async dappDeposit(context, params) {
       const address = context.rootGetters['account/currentAddress'];
@@ -170,7 +132,7 @@ export default {
           amount: params.amount
         },
         grid_id: params.gridId,
-        index: params.index
+        index: "0"
       };
       const {
         data

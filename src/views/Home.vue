@@ -12,11 +12,11 @@
         round
         @click="getStarted"
       >{{$t('home.create')}}</el-button>
-      <!-- <el-button
+      <el-button
         style="z-index:999 !important"
         round
         @click="goDappList"
-      >{{$t("Mine.dapp")}}</el-button> -->
+      >{{$t("Mine.dapp")}}</el-button>
     </div>
     <div class="home-items">
       <div class="items">
@@ -179,7 +179,7 @@ export default {
           center: true
         });
       } else {
-        this.$router.push({ path: "/dapp/list" });
+        this.$router.push({ path: "/dappList" });
       }
     }
   }

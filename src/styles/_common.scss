@@ -289,3 +289,8 @@ a:active {
     background-color: #14286e;
   }
 }
+.detail-container {
+  .el-popover__reference-wrapper {
+    display: flex;
+  }
+}
