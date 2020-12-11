@@ -13,6 +13,22 @@
         </div>
       </div>
     </div>
+    <div class="lock-type">
+      <div class="type-item" v-if="isEmpty(find(dappList, {id:'1000002'}))">
+        <img class="type-img" :src="seasonPng" alt="">
+        <p class="name">庄园（季）</p>
+        <div class="action">
+          <el-button class="btn-disabled" disabled>暂未开放</el-button>
+        </div>
+      </div>
+      <div class="type-item" v-if="isEmpty(find(dappList, {id:'1000003'}))">
+        <img class="type-img" :src="halfYearPng" alt="">
+        <p class="name">城堡（半年）</p>
+        <div class="action">
+          <el-button class="btn-disabled" disabled>暂未开放</el-button>
+        </div>
+      </div>
+    </div>
     <el-dialog
       title="投入"
       :visible.sync="dialogVisible1"
@@ -112,6 +128,9 @@ export default {
       callback();
     };
     return {
+      weekPng,
+      seasonPng,
+      halfYearPng,
       lockType:{
         "1000001":{
           name:'房屋（周）',
@@ -249,6 +268,7 @@ export default {
   },
   methods: {
     isEmpty,
+    find,
     enter(id){
       if (id == '1000001') {
         this.$router.push({path:`/lockDapp/detail?dappId=${id}`})
