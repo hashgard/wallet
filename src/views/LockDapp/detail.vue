@@ -59,7 +59,10 @@
           v-for="(i, index) in depositList"
           :key="index"
         >
-          <div class="header-address">{{i.address}}</div>
+          <div class="header-address">
+            <span v-if="keyStore.address == i.address" style="color:blue;">{{i.address}}</span>
+            <span v-else>{{i.address}}</span>
+          </div>
           <div class="header-amount">
             {{handleDeposit(i.deposit_amount, i.pool_amount) | formatNumber}} GGT
           </div>
@@ -119,7 +122,7 @@ export default {
           value: '12%'
         },
         {
-          area: '8,000,001~100,000,000',
+          area: '8,000,001~900,000,000',
           value: '20%'
         }
       ],
@@ -193,7 +196,7 @@ export default {
         return "8%"
       } else if (this.totalDeposit > 2000000 && this.totalDeposit <= 8000000) {
         return "12%"
-      } else if (this.totalDeposit > 8000001 && this.totalDeposit <= 100000000) {
+      } else if (this.totalDeposit > 8000001 && this.totalDeposit <= 900000000) {
         return "20%"
       }
     },

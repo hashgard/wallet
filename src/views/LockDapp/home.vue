@@ -21,6 +21,8 @@
           <el-button class="btn-disabled" disabled>暂未开放</el-button>
         </div>
       </div>
+    </div>
+    <div class="lock-type">
       <div class="type-item" v-if="isEmpty(find(dappList, {id:'1000003'}))">
         <img class="type-img" :src="halfYearPng" alt="">
         <p class="name">城堡（半年）</p>
